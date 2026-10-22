@@ -25,7 +25,7 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 
 ## Notes for the reviewers
 
-* Words flagged as possibly misspelled in DESCRIPTION (González, Coya, Durbin,
+* Words that may be flagged as possibly misspelled in DESCRIPTION (González, Coya, Durbin,
   Cochrane, Orcutt) are author names and established method names.
 * Examples run in well under 5 seconds each; slow Monte Carlo tests are skipped on
   CRAN (`skip_on_cran()` and an opt-in environment variable). Vignettes use small
