@@ -63,29 +63,48 @@
 #' @param data A data frame, a list, a `ts`/`mts` object, or a 'zoo'/'xts'
 #'   object containing the variables in the formula. Rows must be in time
 #'   order (unless `serial = "none"`).
-#' @param subset Optional expression selecting rows, evaluated in `data`.
-#'   For time series only a contiguous block makes sense.
+#' @param subset Optional expression selecting rows, evaluated in `data`. For
+#'   time series without a time index (`time`, or a ts/zoo `data`) the selected
+#'   rows must be an increasing block of consecutive rows (e.g. `subset =
+#'   51:200`): repeated or reversed rows are an error, and so are skipped rows
+#'   unless `allow_gaps = TRUE`.
 #' @param na.action [stats::na.fail()] (default) stops on missing values;
 #'   [stats::na.omit()] or [stats::na.exclude()] drop them. For time series only
-#'   leading and trailing missing values can be dropped.
+#'   leading and trailing missing values can be dropped. With `na.exclude`,
+#'   [residuals()] and [fitted()] are padded with `NA` to the rows selected by
+#'   `subset`, as for [stats::lm()].
 #' @param serial Serial-correlation correction: `"auto"` (AR order by BIC,
-#'   default), `"fixed"` (use `ar_order`), `"ma1"` (GMA for MA(1) errors) or
-#'   `"none"`.
+#'   default), `"fixed"` (use `ar_order`), `"ma1"` (GMA for MA(1) errors; it
+#'   does not take `ar_order`, `kmax` or `lagged_dep_vars`) or `"none"`.
 #' @param hetero Skedastic-function estimator: `"lasso"` (adaptive Lasso,
 #'   default), `"svr"` (support vector regression, requires 'e1071'),
 #'   `"wls_s1"`/`"wls_s2"` (the parametric fits of Romano and Wolf, 2017, on
 #'   \eqn{\log z} or \eqn{z}), `"known"` (variances given in `variance`) or
-#'   `"none"`.
-#' @param vcov Variance estimator: `"robust"` (default; PG26 eq. 29, GP24
-#'   eqs. 6+8, or Supplement A.4--A.5 depending on the corrections), `"naive"`
-#'   (PG26 eq. 27; serial only), `"nonrobust"` (heteroskedasticity only),
-#'   `"HC0"`--`"HC3"`, or `"bootstrap"`. See [vcov.fgls()].
+#'   `"none"`. `"wls_s1"` takes logs, so it needs strictly positive candidate
+#'   covariates given explicitly in `z` (e.g. `z = "x"` for a positive
+#'   regressor `x`); the cosine terms of the default `z = "auto"` are usually
+#'   negative somewhere, which is an error.
+#' @param vcov Variance estimator; the default `"robust"` is PG26 eq. (29) with
+#'   the serial correction only, GP24 eqs. (6) and (8) with the
+#'   heteroskedasticity correction only, and Supplement eqs. (A.4)--(A.5) with
+#'   both. The types available depend on the corrections:
+#'   * serial only (`hetero = "none"`): `"robust"`, `"naive"` (PG26 eq. 27,
+#'     exogenous regressors only), `"HC0"`--`"HC3"` and `"bootstrap"` (sieve
+#'     bootstrap); with `serial = "ma1"` only `"robust"`;
+#'   * heteroskedasticity only (`serial = "none"`): `"robust"`, `"nonrobust"`,
+#'     `"HC0"`--`"HC3"` and `"bootstrap"` (wild bootstrap);
+#'   * both (the default): `"robust"`, `"HC0"`, `"HC3"` and `"bootstrap"`
+#'     (sieve bootstrap).
+#'
+#'   Any other choice is an error. See [vcov.fgls()].
 #' @param z Candidate covariates of the skedastic function: `"auto"` (default)
 #'   builds \eqn{\{x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\}} from every
 #'   non-constant regressor (see [make_dictionary()]); a character vector of
 #'   regressor names; a one-sided formula evaluated in `data` (e.g. `~ x +
 #'   I(x^2) + w`); or a numeric matrix / data frame with one row per row of
-#'   `data`.
+#'   `data`. With `hetero = "wls_s1"` all candidates must be strictly positive,
+#'   so give them explicitly, e.g. `z = "x"` or `z = ~ x + I(x^2)` for a
+#'   positive regressor `x`.
 #' @param ar_order Fixed AR order (implies `serial = "fixed"`).
 #' @param kmax Largest AR order considered: `NULL` (default,
 #'   \eqn{\lfloor 12 (T/200)^{1/4} \rfloor}), an integer, or `"theory"`
@@ -93,7 +112,7 @@
 #'   regression uses at most half of the sample as regressors.
 #' @param ic Lag-order criterion: `"bic"` (default) or `"aic"`.
 #' @param lagged_dep_vars Names (or positions) of model-matrix columns that are
-#'   lags of the dependent variable.
+#'   lags of the dependent variable (not available with `serial = "ma1"`).
 #' @param wallis_regressor Regressor used for the Wallis recovery of the AR
 #'   coefficients: `"auto"` (largest Durbin \eqn{|t|}), `"median"`, or a name.
 #' @param exog Assumption on the regressors: `"predetermined"` (default) or
@@ -103,7 +122,10 @@
 #'   eq. (29) to the variance of the combined estimator. Default `TRUE` when
 #'   `exog = "predetermined"`.
 #' @param variance Known error variances for `hetero = "known"`: a numeric
-#'   vector with one value per observation, or a function of the model matrix.
+#'   vector with one value per row of `data`, whose values are selected by
+#'   `subset` and `na.action` together with the rows of the data (a vector with
+#'   one value per observation used is also accepted); or a function of the
+#'   model matrix returning one value per observation used.
 #' @param delta Floor in \eqn{\log\max(\hat u_t^2, \delta^2)}, in the units of
 #'   the response (default 0.1, as in the paper).
 #' @param psi_grid Exponents \eqn{\psi} of the adaptive weights; 0 is the
@@ -120,8 +142,11 @@
 #'   normal inference.
 #' @param time Time index for data frames: the name of a `Date`, `POSIXct` or
 #'   numeric column of `data`, or a vector with one value per row. It is used
-#'   to check that rows are sorted and have no gaps.
-#' @param allow_gaps Accept a time index with gaps (lags are then positional).
+#'   to check that rows are sorted and have no gaps, and must have no missing
+#'   values in the sample. Convert character dates first, e.g. with
+#'   [as.Date()] or `zoo::as.yearmon()`.
+#' @param allow_gaps Accept a time index with gaps, or a `subset` that skips
+#'   rows (lags are then positional), with a warning.
 #' @param check_stationarity Screen the response and the regressors with
 #'   augmented Dickey-Fuller tests and warn when a unit root is not rejected.
 #' @param control Advanced options, see [fgls_control()].
