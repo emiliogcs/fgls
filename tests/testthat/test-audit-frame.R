@@ -181,3 +181,37 @@ test_that("known variances follow subset and na.action like the data", {
     coef(fgls(y ~ x, data = comb[21:200, ], hetero = "known", variance = vc[21:200]))
   )
 })
+
+test_that("hetero = \"wls_s1\" with the default z explains how to fix it", {
+  het <- simulate_hetero(200, seed = 10)
+  expect_error(
+    lasso_fgls(y ~ x, data = het, hetero = "wls_s1"),
+    "cos\\(x\\), cos\\(2x\\) have non-positive values.*z = \"x\"",
+    class = "fgls_error_input"
+  )
+  expect_error(fgls(y ~ x, data = het, serial = "none", hetero = "wls_s1"), "wls_s2",
+    class = "fgls_error_input"
+  )
+  expect_s3_class(lasso_fgls(y ~ x, data = het, hetero = "wls_s1", z = "x"), "fgls")
+  expect_s3_class(lasso_fgls(y ~ x, data = het, hetero = "wls_s1", z = ~ x + I(x^2)), "fgls")
+})
+
+test_that("serial = \"ma1\" rejects AR options instead of ignoring them", {
+  sim <- simulate_serial(200, seed = 1)
+  expect_error(serial_fgls(y ~ x, data = sim, serial = "ma1", ar_order = 3), "`ar_order`",
+    class = "fgls_error_input"
+  )
+  expect_error(serial_fgls(y ~ x, data = sim, serial = "ma1", kmax = 2), "`kmax`",
+    class = "fgls_error_input"
+  )
+  expect_error(
+    fgls(y ~ x, data = sim, serial = "ma1", hetero = "none", lagged_dep_vars = "x"),
+    "`lagged_dep_vars`", class = "fgls_error_input"
+  )
+  expect_error(
+    serial_fgls(y ~ x, data = sim, serial = "ma1", ar_order = 3, kmax = 2),
+    "`ar_order`, `kmax`", class = "fgls_error_input"
+  )
+  expect_s3_class(serial_fgls(y ~ x, data = sim, serial = "ma1"), "fgls")
+  expect_s3_class(serial_fgls(y ~ x, data = sim, serial = "ma1", lagged_dep_vars = NULL), "fgls")
+})

@@ -14,12 +14,17 @@ wls_skedastic <- function(r, Z, names = colnames(Z), kind = "wls_s1") {
   if (kind == "wls_s1") {
     bad <- names[apply(Z, 2L, function(v) any(v <= 0))]
     if (length(bad)) {
+      # the default z = "auto" dictionary contains cos(x) and cos(2x), so this is
+      # the usual outcome of hetero = "wls_s1" without an explicit z (as in pyfgls)
       fgls_abort(sprintf(
         paste0(
-          "hetero = \"wls_s1\" takes logs of the covariates, but %s have non-positive ",
-          "values. Use \"wls_s2\" or positive covariates."
+          "hetero = \"wls_s1\" takes logs of the candidate covariates, so they must be ",
+          "strictly positive, but %s %s non-positive values. Give positive covariates ",
+          "in `z`, e.g. z = \"x\" (names of positive regressors) or z = ~ x + I(x^2); ",
+          "the default z = \"auto\" includes cos terms, which are usually negative ",
+          "somewhere. Or use hetero = \"wls_s2\"."
         ),
-        paste(bad, collapse = ", ")
+        paste(bad, collapse = ", "), if (length(bad) > 1L) "have" else "has"
       ))
     }
     Fm <- log(Z)

@@ -216,6 +216,28 @@ fgls <- function(formula, data, subset, na.action = stats::na.fail,
     fgls_abort("`control` must be created by fgls_control().")
   }
   check_seed(seed)
+  if (serial == "ma1") {
+    # the GMA filter (PG26 Section 5) has no AR order to fix or select, and its
+    # theta comes from OLS residuals, which lagged dependent variables make
+    # inconsistent: reject these options rather than ignore them
+    unused <- c(
+      if (!is.null(ar_order)) "ar_order",
+      if (!is.null(kmax)) "kmax",
+      if (length(lagged_dep_vars)) "lagged_dep_vars"
+    )
+    if (length(unused)) {
+      fgls_abort(sprintf(
+        paste0(
+          "serial = \"ma1\" (GMA estimator) does not use %s: it filters with an ",
+          "estimated MA(1) coefficient instead of an AR(k) approximation, and does ",
+          "not handle lagged dependent variables. Drop %s, or use serial = \"auto\" ",
+          "(or \"fixed\" with ar_order)."
+        ),
+        paste0("`", unused, "`", collapse = ", "),
+        if (length(unused) > 1L) "these arguments" else "this argument"
+      ))
+    }
+  }
   if (!is.null(ar_order) && serial == "auto") serial <- "fixed"
   if (serial == "fixed" && is.null(ar_order)) {
     fgls_abort("serial = \"fixed\" needs ar_order = <integer>.")
