@@ -117,7 +117,9 @@ ols_robust <- function(formula, data, subset, na.action = stats::na.fail,
     allow_gaps, time_series = vtype %in% c("HAC", "NW")
   )
   o <- ols_core(bd$d$X, bd$d$y, vtype, kernel, bandwidth, small_sample, bd$d$const_col)
-  bench_result(bd, o$beta, o$cov, "OLS", o$label, use_t, cl, model, notes = o$notes)
+  res <- bench_result(bd, o$beta, o$cov, "OLS", o$label, use_t, cl, model, notes = o$notes)
+  res$vcov_code <- vtype # the requested type; the label also shows kernel and bandwidth
+  res
 }
 
 #' @rdname ols_robust

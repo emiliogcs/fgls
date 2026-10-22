@@ -12,7 +12,9 @@
 #' @param which Panels to draw (subset of 1:4).
 #' @param ask Ask before each new page.
 #' @param lag.max Number of lags of the autocorrelation function.
-#' @param ... Further graphical arguments passed to [plot()].
+#' @param ... Further graphical arguments passed to [plot()] (or
+#'   [stats::qqnorm()] for panel 4). `main`, `xlab` and `ylab` replace the
+#'   default titles and axis labels of every panel drawn.
 #' @return `x`, invisibly.
 #' @family fgls
 #' @export
@@ -29,42 +31,51 @@ plot.fgls <- function(x, which = 1:4, ask = FALSE, lag.max = 20L, ...) {
   )
   on.exit(graphics::par(op), add = TRUE)
   inn <- x$innovations
+  # Each panel takes its default titles as formal arguments, so that `main`,
+  # `xlab` or `ylab` given in `...` replace them instead of being matched twice.
+  panel_resid <- function(xlab = "Fitted values", ylab = "Residuals",
+                          main = "Residuals vs fitted", ...) {
+    graphics::plot(x$fitted.values, x$residuals, xlab = xlab, ylab = ylab, main = main, ...)
+    graphics::abline(h = 0, lty = 3)
+  }
+  panel_acf <- function(main = "ACF of innovations", ...) {
+    graphics::plot(stats::acf(inn, lag.max = lag.max, plot = FALSE), main = main, ...)
+  }
+  panel_ic <- function(xlab = "AR order k", ylab = toupper(x$serial$method),
+                       main = "Lag-order criterion", ...) {
+    bp <- x$bic_path
+    if (is.null(bp)) {
+      graphics::plot.new()
+      graphics::title(main = main)
+      graphics::text(0.5, 0.5, "no lag-order selection")
+    } else {
+      graphics::plot(as.numeric(names(bp)), bp,
+        type = "b", xlab = xlab, ylab = ylab, main = main, ...
+      )
+      graphics::abline(v = x$ar_order, lty = 2)
+    }
+  }
+  panel_sked <- function(xlab = "Fitted values", ylab = "Fitted variance (mean 1)",
+                         main = "Skedastic fit", ...) {
+    v <- x$skedastic$variance
+    fv <- utils::tail(x$fitted.values, length(v))
+    graphics::plot(fv, v, xlab = xlab, ylab = ylab, main = main, ...)
+  }
+  panel_qq <- function(main = "Normal Q-Q of innovations", ...) {
+    stats::qqnorm(inn, main = main, ...)
+    stats::qqline(inn, lty = 3)
+  }
   for (w in which) {
     if (w == 1L) {
-      graphics::plot(x$fitted.values, x$residuals,
-        xlab = "Fitted values", ylab = "Residuals",
-        main = "Residuals vs fitted", ...
-      )
-      graphics::abline(h = 0, lty = 3)
+      panel_resid(...)
     } else if (w == 2L) {
-      a <- stats::acf(inn, lag.max = lag.max, plot = FALSE)
-      graphics::plot(a, main = "ACF of innovations", ...)
+      panel_acf(...)
     } else if (w == 3L) {
-      bp <- x$bic_path
-      if (is.null(bp)) {
-        graphics::plot.new()
-        graphics::title(main = "Lag-order criterion")
-        graphics::text(0.5, 0.5, "no lag-order selection")
-      } else {
-        k <- as.numeric(names(bp))
-        graphics::plot(k, bp,
-          type = "b", xlab = "AR order k", ylab = toupper(x$serial$method),
-          main = "Lag-order criterion", ...
-        )
-        graphics::abline(v = x$ar_order, lty = 2)
-      }
+      panel_ic(...)
+    } else if (!is.null(x$skedastic)) {
+      panel_sked(...)
     } else {
-      if (!is.null(x$skedastic)) {
-        v <- x$skedastic$variance
-        fv <- utils::tail(x$fitted.values, length(v))
-        graphics::plot(fv, v,
-          xlab = "Fitted values", ylab = "Fitted variance (mean 1)",
-          main = "Skedastic fit", ...
-        )
-      } else {
-        stats::qqnorm(inn, main = "Normal Q-Q of innovations", ...)
-        stats::qqline(inn, lty = 3)
-      }
+      panel_qq(...)
     }
   }
   invisible(x)

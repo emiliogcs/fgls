@@ -33,6 +33,34 @@ new_fgls <- function(coefficients, vcov, method, vcov_type, nobs, n_eff, use_t, 
   res
 }
 
+# Canonical code of the stored covariance: the `type` for which vcov() returns
+# the stored matrix without recomputation. It is kept apart from the display
+# label `vcov_type`: "HAC (QS, bw = 2.34)" has code "HAC", a bootstrap label
+# "bootstrap (sieve AR(1), wild)" has code "bootstrap". Fits made before the
+# code was stored derive it from the label.
+vcov_code_of <- function(res) {
+  if (!is.null(res$vcov_code)) {
+    return(res$vcov_code)
+  }
+  if (!is.null(res$bootstrap)) {
+    return("bootstrap")
+  }
+  lab <- res$vcov_type
+  if (is.null(lab)) {
+    return(NA_character_)
+  }
+  if (startsWith(lab, "HAC (QS")) {
+    return("HAC")
+  }
+  if (startsWith(lab, "HAC (Bartlett")) {
+    return("NW")
+  }
+  if (startsWith(lab, "bootstrap")) {
+    return("bootstrap")
+  }
+  lab
+}
+
 fgls_build <- function(spec, est, y, cov_type, rn) {
   switch(spec$mode,
     serial = if (spec$serial == "ma1") {
@@ -81,7 +109,7 @@ serial_notes <- function(info, cov_type, exog) {
       paste(info$dropped_lags, collapse = ", "), "."
     ))
   }
-  if (exog == "exogenous" && cov_type == "robust" && info$nonexogeneity_share > 0.1) {
+  if (exog == "exogenous" && cov_type == "robust" && isTRUE(info$nonexogeneity_share > 0.1)) {
     notes <- c(notes, sprintf(
       paste0(
         "You declared exog = \"exogenous\", but the first-stage correction adds %.0f%% ",
@@ -90,7 +118,8 @@ serial_notes <- function(info, cov_type, exog) {
       100 * info$nonexogeneity_share
     ))
   }
-  if (length(info$lagged_dep_vars)) {
+  # the Wallis recovery runs only when k* > 0 (PG26 Section 4.2)
+  if (length(info$wallis_regressors)) {
     notes <- c(notes, paste0(
       "AR coefficients recovered by the Wallis ratio from regressor(s) ",
       paste(info$wallis_regressors, collapse = ", "), " (PG26 Section 4.2)."

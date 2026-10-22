@@ -21,16 +21,30 @@
 #' are not of the generic form those functions assume: `sandwich::vcovHAC()` and
 #' related functions would *not* reproduce them.
 #'
+#' @section Variance types:
+#' `vcov(fit, type = t)` returns the stored covariance when `t` is the type the
+#' fit was made with (e.g. `"robust"`, or `"HAC"` for [ols_robust()], whose
+#' stored `vcov_type` label also shows the kernel and bandwidth). Other types
+#' are recomputed from the stored estimates only for fits made by [fgls()],
+#' [serial_fgls()] and [lasso_fgls()], and for the F-C stage of a combined fit
+#' (`fit$stages$serial`, types `"robust"`, `"HC0"` and `"HC3"`). The benchmark
+#' estimators store only the covariance they were fitted with; refit them with
+#' another `vcov` instead.
+#'
 #' @param object,x,formula An `"fgls"` object.
 #' @param type For `vcov()` and `confint()`: `NULL` (the variance chosen when
 #'   fitting) or another variance type to compute from the stored estimates:
 #'   `"robust"`, `"naive"`, `"nonrobust"`, `"HC0"`--`"HC3"` (where
-#'   available) or `"bootstrap"` (re-runs the estimator). For `residuals()`:
-#'   `"response"` (\eqn{y_t - x_t'\hat\beta}, full sample) or `"innovations"`
-#'   (residuals of the final filtered and/or weighted regression).
+#'   available) or `"bootstrap"` (re-runs the estimator); see the section
+#'   *Variance types*. For `residuals()`: `"response"`
+#'   (\eqn{y_t - x_t'\hat\beta}, full sample) or `"innovations"` (residuals
+#'   of the final filtered and/or weighted regression). For `predict()`: only
+#'   `"response"` (the mean of the response) is supported.
 #' @param parm Coefficients (names or positions); all by default.
 #' @param level Confidence level.
 #' @param newdata Optional data frame in which to look for the regressors.
+#'   Without it, predictions are for the observations of the fit, padded with
+#'   `NA` for the rows dropped by [stats::na.exclude()].
 #' @param se.fit Return standard errors of the predicted means.
 #' @param interval `"none"` or `"confidence"` (for the mean of the response).
 #' @param na.action Missing-value handling for `newdata`.
@@ -40,7 +54,8 @@
 #' @return The usual values: a coefficient covariance matrix (`vcov`), a
 #'   matrix of confidence limits (`confint`), vectors of residuals or fitted
 #'   values, predictions (a vector, or a list/matrix with `se.fit`/`interval`),
-#'   or the corresponding model components.
+#'   or the corresponding model components. The `print()` method returns `x`
+#'   invisibly.
 #' @name fgls-methods
 #' @family fgls
 #' @examples
@@ -57,17 +72,31 @@ NULL
 #' @rdname fgls-methods
 #' @export
 vcov.fgls <- function(object, type = NULL, ...) {
-  if (is.null(type) || identical(type, object$vcov_type)) {
+  # the stored matrix for its own type: compare with the canonical code, not
+  # only with the display label (e.g. "HAC (QS, bw = 2.34)" has code "HAC")
+  if (is.null(type) || identical(type, vcov_code_of(object)) ||
+    identical(type, object$vcov_type)) {
     return(object$vcov)
   }
   fgls_recompute_vcov(object, type)
 }
 
 fgls_recompute_vcov <- function(object, type) {
+  # `[[` matches exactly ($ would partially match "stages" on the final fit)
+  if (!is.null(object[["stage_name"]])) {
+    return(stage_recompute_vcov(object, type))
+  }
   spec <- object$spec
   est <- object$internal
   if (is.null(spec) || is.null(est)) {
-    fgls_abort("This fit does not store what is needed to recompute the variance.")
+    fgls_abort(sprintf(
+      paste0(
+        "vcov(type = \"%s\") is not available: this fit stores only the covariance it was ",
+        "fitted with (type = \"%s\"). Other variance types can be recomputed only for fits ",
+        "made by fgls(), serial_fgls() or lasso_fgls(); refit with the variance you need."
+      ),
+      paste(format(type), collapse = ", "), vcov_code_of(object)
+    ))
   }
   arg_choice(type, allowed_vcov(spec$mode, spec$serial), "type")
   if (type == "bootstrap") {
@@ -88,6 +117,40 @@ fgls_recompute_vcov <- function(object, type) {
   )
   dimnames(V) <- list(nm, nm)
   V
+}
+
+# Variance of an intermediate stage of a combined fit. The F-C stage
+# (stages$serial) uses the Supplement (A.4)-(A.5) sandwich with unit weights,
+# computed by the same code as when fitting from the estimates in
+# `stage_internal` (see fc_stage_internal()).
+stage_recompute_vcov <- function(object, type) {
+  stage <- object[["stage_name"]]
+  est <- object[["stage_internal"]]
+  if (!identical(stage, "serial") || is.null(est)) {
+    fgls_abort(sprintf("vcov(type =) cannot recompute the variance of the \"%s\" stage.", stage))
+  }
+  if (identical(type, "bootstrap")) {
+    fgls_abort(paste0(
+      "The bootstrap variance is not available for the F-C stage (fit$stages$serial); ",
+      "use serial_fgls(..., vcov = \"bootstrap\") for a serial-correction-only bootstrap."
+    ))
+  }
+  arg_choice(type, combined_cov_types, "type")
+  V <- combined_covariance_from_estimate(est, list(X = object$x), object$y, type)$cov_fc
+  nm <- names(object$coefficients)
+  dimnames(V) <- list(nm, nm)
+  V
+}
+
+# The estimates of a combined fit that combined_covariances() reads, kept with
+# the F-C stage instead of a second copy of all the internals of the fit.
+fc_stage_internal <- function(est) {
+  fr <- est$serial$filtered
+  list(
+    serial = list(filtered = fr[c("yf", "Xf", "ehat", "uhat", "n_eff")], order = est$serial$order),
+    hetero = est$hetero[c("beta", "v", "df")],
+    C = est$C, h_fc = est$h_fc
+  )
 }
 
 fgls_df <- function(object) {
@@ -132,7 +195,13 @@ fitted.fgls <- function(object, ...) {
 #' @rdname fgls-methods
 #' @export
 predict.fgls <- function(object, newdata, se.fit = FALSE, interval = c("none", "confidence"),
-                         level = 0.95, na.action = stats::na.pass, ...) {
+                         level = 0.95, type = "response", na.action = stats::na.pass, ...) {
+  if (!identical(type, "response")) {
+    fgls_abort(sprintf(
+      "predict() supports only type = \"response\" for fgls fits; got %s.",
+      paste0("\"", format(type), "\"", collapse = ", ")
+    ))
+  }
   interval <- arg_default(interval, c("none", "confidence"), "interval")
   if (missing(newdata) || is.null(newdata)) {
     X <- object$x
@@ -143,24 +212,34 @@ predict.fgls <- function(object, newdata, se.fit = FALSE, interval = c("none", "
     X <- stats::model.matrix(tt, m, contrasts.arg = object$contrasts)
     offset_na <- NULL
   }
-  beta <- object$coefficients
-  if (!identical(colnames(X), names(beta))) {
+  if (!identical(colnames(X), names(object$coefficients))) {
     fgls_abort("The regressors in `newdata` do not match the fitted model.")
   }
-  pred <- drop(X %*% beta)
+  # without newdata, pad every component for the rows dropped by na.exclude,
+  # as predict.lm() does
+  pad <- function(v) if (is.null(offset_na)) v else stats::napredict(offset_na, v)
   if (!se.fit && interval == "none") {
-    return(if (is.null(offset_na)) pred else stats::napredict(offset_na, pred))
+    return(pad(drop(X %*% object$coefficients)))
   }
-  se <- sqrt(pmax(rowSums((X %*% object$vcov) * X), 0))
+  p <- predict_mean(object, X, level)
+  df <- fgls_df(object)
   if (interval == "confidence") {
-    crit <- critical_value(1 - level, fgls_df(object))
-    fit <- cbind(fit = pred, lwr = pred - crit * se, upr = pred + crit * se)
+    fit <- pad(cbind(fit = p$fit, lwr = p$lwr, upr = p$upr))
     if (!se.fit) {
       return(fit)
     }
-    return(list(fit = fit, se.fit = se, df = fgls_df(object)))
+    return(list(fit = fit, se.fit = pad(p$se), df = df))
   }
-  list(fit = pred, se.fit = se, df = fgls_df(object))
+  list(fit = pad(p$fit), se.fit = pad(p$se), df = df)
+}
+
+# Predicted means x'b, their standard errors (x' V x)^{1/2} and confidence
+# limits (normal, or Student-t with use_t = TRUE) for the rows of X.
+predict_mean <- function(object, X, level = 0.95) {
+  fit <- drop(X %*% object$coefficients)
+  se <- sqrt(pmax(rowSums((X %*% object$vcov) * X), 0))
+  crit <- critical_value(1 - level, fgls_df(object))
+  list(fit = fit, se = se, lwr = fit - crit * se, upr = fit + crit * se)
 }
 
 #' @rdname fgls-methods

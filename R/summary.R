@@ -71,7 +71,13 @@ summary_info <- function(x) {
       } else {
         "-"
       }
-      info[["Non-exogeneity share"]] <- sprintf("%.3f", s$nonexogeneity_share)
+      # NA (shown as "-") when the share was not computed, e.g. for benchmark fits
+      sh <- s$nonexogeneity_share
+      info[["Non-exogeneity share"]] <- if (length(sh) == 1L && !is.na(sh)) {
+        sprintf("%.3f", sh)
+      } else {
+        "-"
+      }
       if (length(s$lagged_dep_vars)) {
         info[["Lagged dep. vars"]] <- paste(s$lagged_dep_vars, collapse = ", ")
       }
@@ -88,7 +94,12 @@ summary_info <- function(x) {
       }
     }
     if (identical(h$method, "lasso") && !is.null(h$psi)) {
-      info[["Lasso psi, lambda"]] <- sprintf("%g, %.4g", h$psi, h$lambda)
+      # lambda on glmnet's scale (objective divided by n); lambda_paper = n * lambda
+      # is the penalty of GP24 eq. (4)
+      info[["Lasso psi, lambda"]] <- paste0(
+        sprintf("%g, %.4g (glmnet scale", h$psi, h$lambda),
+        if (is.null(h$lambda_paper)) ")" else sprintf("; %.4g in GP24 eq. 4)", h$lambda_paper)
+      )
     }
     info[["df_hat"]] <- format(h$df_hat)
     v <- h$variance
