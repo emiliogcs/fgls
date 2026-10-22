@@ -2,3 +2,62 @@ url: https://emiliogcs.github.io/fgls/
 template:
   bootstrap: 5
   math-rendering: mathjax
+
+home:
+  title: "fgls: Feasible GLS for serial correlation and heteroskedasticity"
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+
+articles:
+  - title: Getting started
+    navbar: ~
+    contents:
+      - fgls
+  - title: Methods
+    navbar: Methods
+    contents:
+      - serial-correlation
+      - heteroskedasticity
+      - combined
+  - title: Validation
+    navbar: Validation
+    contents:
+      - validation
+
+reference:
+  - title: Estimation
+    desc: FGLS estimators and their options.
+    contents:
+      - fgls
+      - serial_fgls
+      - lasso_fgls
+      - fgls_control
+  - title: Working with fits
+    contents:
+      - summary.fgls
+      - fgls-methods
+      - plot.fgls
+      - compare_fgls
+      - fgls-broom
+  - title: Benchmarks
+    desc: OLS with HAC/HC standard errors, Cochrane-Orcutt, Durbin, infeasible and hybrid GLS.
+    contents:
+      - ols_robust
+  - title: Diagnostics
+    contents:
+      - test_predetermined
+      - adf_test
+      - weight_diagnostics
+  - title: Candidate covariates
+    contents:
+      - make_dictionary
+  - title: Simulation designs of the papers
+    contents:
+      - simulate_serial
+  - title: Package and conditions
+    contents:
+      - fgls-package
+      - fgls-conditions

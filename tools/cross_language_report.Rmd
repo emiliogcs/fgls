@@ -1,0 +1,58 @@
+---
+title: "fgls vs pyfgls: cross-language agreement"
+output:
+  html_document:
+    toc: true
+params:
+  rds: "../inst/extdata/cross_language.rds"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 8, fig.height = 4)
+res <- readRDS(params$rds)
+```
+
+Both packages fitted the same simulated data sets with the same cross-validation
+folds (R generates both; pyfgls `r res$designs[[1]]$pyfgls`, fgls
+`r res$fgls_version`, `r res$created`). Deterministic quantities are expected to
+agree to machine precision; a few data sets can differ in the Lasso support when
+the pyfgls Lasso path is inexact (penalties below float32 epsilon; see the
+package documentation).
+
+## Discrepancies by design and quantity
+
+`max_abs` / `median_abs`: absolute differences; `max_rel`: largest relative
+difference; `share_different`: share of data sets with a relative difference
+above 1e-6 (or a different selected set / order).
+
+```{r}
+s <- res$summary
+s$max_abs <- signif(s$max_abs, 3)
+s$median_abs <- signif(s$median_abs, 3)
+s$max_rel <- signif(s$max_rel, 3)
+s$share_different <- round(s$share_different, 4)
+knitr::kable(s, row.names = FALSE)
+```
+
+## Coverage of 95% intervals for the slope
+
+```{r}
+cv <- t(sapply(res$designs, function(d) d$coverage))
+knitr::kable(round(cv, 4))
+```
+
+## Estimates and standard errors, R against Python
+
+```{r, fig.height = 2.6 * ceiling(length(res$designs) / 2)}
+op <- par(mfrow = c(length(res$designs), 2), mar = c(4, 4, 2, 1))
+for (nm in names(res$designs)) {
+  d <- res$designs[[nm]]
+  plot(d$py$beta, d$r$beta, pch = 20, cex = 0.5, xlab = "pyfgls", ylab = "fgls",
+       main = paste(nm, "slope"))
+  abline(0, 1, col = "grey")
+  plot(d$py$se, d$r$se, pch = 20, cex = 0.5, xlab = "pyfgls", ylab = "fgls",
+       main = paste(nm, "std. error"))
+  abline(0, 1, col = "grey")
+}
+par(op)
+```

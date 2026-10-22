@@ -1,0 +1,30 @@
+# Paper-replication (Monte Carlo) acceptance tests: slow, nightly, not on CRAN.
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+
+name: statistical
+
+permissions: read-all
+
+jobs:
+  statistical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      FGLS_SLOW_TESTS: "true"
+      FGLS_SLOW_CORES: "4"
+      NOT_CRAN: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, local::.
+          needs: check
+      - name: Statistical acceptance tests
+        run: testthat::test_local(filter = "statistical", stop_on_failure = TRUE)
+        shell: Rscript {0}

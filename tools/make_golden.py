@@ -532,12 +532,8 @@ def s9_combined(out: Path) -> dict[str, Any]:
     xn = ["(Intercept)", "x"]
     write_csv(out / "s9_data.csv", {"y": sim.y, "x": sim.X[:, 1]})
     res = combined_block(sim.y, sim.X, xn, seed)
-    res["no_first_stage"] = slim(
-        {**combined_block(sim.y, sim.X, xn, seed, first_stage_correction=False)}
-    ) | {
-        "vcov_FCH": combined_block(sim.y, sim.X, xn, seed, first_stage_correction=False)["vcov_FCH"],
-        "vcov_FC": combined_block(sim.y, sim.X, xn, seed, first_stage_correction=False)["vcov_FC"],
-    }
+    nofs = combined_block(sim.y, sim.X, xn, seed, first_stage_correction=False)
+    res["no_first_stage"] = slim(nofs) | {"vcov_FCH": nofs["vcov_FCH"], "vcov_FC": nofs["vcov_FC"]}
     return {"formula": "y ~ x", "T": 200, "seed": seed, "z": "auto", "results": res}
 
 
@@ -557,13 +553,70 @@ def s10_homoskedastic(out: Path) -> dict[str, Any]:
     return {"formula": "y ~ x", "T": 200, "seed": seed, "z": "auto", "results": res}
 
 
+# ------------------------------------------------------------------------- drift
+def _compare(a: Any, b: Any, path: str, rtol: float, out: list[str]) -> None:
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k in sorted(set(a) | set(b)):
+            if k not in a or k not in b:
+                out.append(f"{path}.{k}: present in only one version")
+            else:
+                _compare(a[k], b[k], f"{path}.{k}", rtol, out)
+    elif isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b):
+            out.append(f"{path}: length {len(a)} != {len(b)}")
+            return
+        for i, (x, y) in enumerate(zip(a, b, strict=True)):
+            _compare(x, y, f"{path}[{i}]", rtol, out)
+    elif isinstance(a, float | int) and isinstance(b, float | int) and not isinstance(a, bool):
+        scale = max(abs(float(a)), abs(float(b)), 1e-300)
+        if abs(float(a) - float(b)) > rtol * scale and abs(float(a) - float(b)) > 1e-14:
+            out.append(f"{path}: {a!r} != {b!r}")
+    elif a != b:
+        out.append(f"{path}: {a!r} != {b!r}")
+
+
+def check_drift(committed: Path, fresh: Path, rtol: float) -> int:
+    """Compare regenerated fixtures with the committed ones; non-zero exit on drift."""
+    problems: list[str] = []
+    for f in sorted(fresh.glob("*.json")):
+        if f.name == "MANIFEST.json":
+            continue
+        old = committed / f.name
+        if not old.exists():
+            problems.append(f"{f.name}: not committed")
+            continue
+        _compare(json.loads(old.read_text()), json.loads(f.read_text()), f.stem, rtol, problems)
+    for f in sorted(fresh.glob("*.csv")):
+        old = committed / f.name
+        if not old.exists() or old.read_bytes() != f.read_bytes():
+            problems.append(f"{f.name}: data differ")
+    if problems:
+        print(f"Golden fixtures drifted ({len(problems)} differences; first 50):")
+        print("\n".join(problems[:50]))
+        return 1
+    print("No drift: regenerated fixtures agree with the committed ones.")
+    return 0
+
+
 # ------------------------------------------------------------------------------ main
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     root = Path(__file__).resolve().parents[1]
     ap.add_argument("--out", default=str(root / "tests" / "testthat" / "fixtures" / "golden"))
     ap.add_argument("--only", nargs="*", default=None)
+    ap.add_argument(
+        "--check",
+        action="store_true",
+        help="regenerate into a temporary directory and compare with the committed fixtures",
+    )
+    ap.add_argument("--rtol", type=float, default=1e-10, help="relative tolerance for --check")
     args = ap.parse_args(argv)
+    if args.check:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            main(["--out", tmp] + (["--only", *args.only] if args.only else []))
+            return check_drift(Path(args.out), Path(tmp), args.rtol)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     if pyfgls.__version__ != PYFGLS_PIN:

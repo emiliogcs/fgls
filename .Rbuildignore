@@ -18,3 +18,4 @@
 ^Meta$
 ^.*\.tar\.gz$
 ^.*\.Rcheck$
+^validation$

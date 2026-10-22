@@ -10,3 +10,6 @@ inst/doc
 *.Rcheck/
 __pycache__/
 .DS_Store
+validation/cache/
+validation/cache_dev/
+validation/*.html

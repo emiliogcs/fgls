@@ -1,0 +1,81 @@
+# Cross-language golden fixtures: regenerate them with pyfgls and compare with
+# the committed ones. Not part of the CRAN checks. On drift, open an issue
+# (never commit automatically).
+on:
+  schedule:
+    - cron: "17 5 * * 1" # weekly, Monday 05:17 UTC
+  push:
+    paths:
+      - "tools/make_golden.py"
+      - "tests/testthat/fixtures/golden/**"
+      - ".github/workflows/golden.yaml"
+  workflow_dispatch:
+
+name: golden
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  golden:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pyfgls: ["pinned", "latest"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pyfgls
+        run: |
+          if [ "${{ matrix.pyfgls }}" = "pinned" ]; then
+            pin=$(python -c "import json; print(json.load(open('tests/testthat/fixtures/golden/MANIFEST.json'))['pyfgls_pin'])")
+            pip install "pyfgls==${pin}"
+          else
+            pip install --upgrade pyfgls
+          fi
+
+      - name: Regenerate and compare
+        id: check
+        run: |
+          set -o pipefail
+          python tools/make_golden.py --check 2>&1 | tee drift.txt
+
+      - uses: r-lib/actions/setup-r@v2
+        if: success()
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        if: success()
+        with:
+          extra-packages: any::testthat, any::jsonlite, local::.
+          needs: check
+
+      - name: Golden tests in R
+        if: success()
+        run: |
+          testthat::test_local(filter = "golden", stop_on_failure = TRUE)
+        shell: Rscript {0}
+
+      - name: Open an issue on drift
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "The weekly golden-fixture check failed with pyfgls (${{ matrix.pyfgls }})."
+            echo
+            echo '```'
+            head -c 60000 drift.txt || true
+            echo '```'
+            echo
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > body.md
+          gh issue create --repo "${{ github.repository }}" \
+            --title "Golden fixtures drift (pyfgls ${{ matrix.pyfgls }})" --body-file body.md

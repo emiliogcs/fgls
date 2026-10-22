@@ -1,0 +1,34 @@
+bibentry(
+  bibtype = "Article",
+  header = "To cite the serial-correlation methods (and the combined estimator) in publications use:",
+  title = "Feasible {GLS} for Time Series Regression",
+  author = c(person("Pierre", "Perron"), person("Emilio", "González-Coya")),
+  journal = "Journal of Econometrics",
+  year = "2026",
+  volume = "258",
+  pages = "106346",
+  doi = "10.1016/j.jeconom.2026.106346"
+)
+
+bibentry(
+  bibtype = "Article",
+  header = "To cite the heteroskedasticity methods use:",
+  title = "Estimation in the Presence of Heteroskedasticity of Unknown Form: A {L}asso-based Approach",
+  author = c(person("Emilio", "González-Coya"), person("Pierre", "Perron")),
+  journal = "Journal of Econometric Methods",
+  year = "2024",
+  volume = "13",
+  number = "1",
+  pages = "29--48",
+  doi = "10.1515/jem-2023-0007"
+)
+
+bibentry(
+  bibtype = "Manual",
+  header = "To cite the software use:",
+  title = "{fgls}: Feasible {GLS} for Serial Correlation and Heteroskedasticity",
+  author = person("Emilio", "González-Coya"),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/emiliogcs/fgls"
+)
