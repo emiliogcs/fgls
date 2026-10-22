@@ -229,7 +229,7 @@ prepare_data <- function(y, X, y_name = "y", index = NULL, time_series = TRUE,
   X <- as.matrix(X)
   storage.mode(X) <- "double"
   x_names <- colnames(X)
-  if (is.null(x_names)) x_names <- paste0("x", seq_len(ncol(X)))
+  if (is.null(x_names)) x_names <- sprintf("x%d", seq_len(ncol(X)))
   colnames(X) <- x_names
   if (nrow(X) != length(y)) {
     fgls_abort(sprintf("y has %d observations but X has %d rows.", length(y), nrow(X)))

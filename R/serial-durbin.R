@@ -45,13 +45,18 @@ durbin_design <- function(y, X, x_names, order, start = order, y_name = "y",
     A <- do.call(cbind, parts)
     meta_lag <- rep(seq_len(order), each = q + 1L)
     meta_var <- rep(0:q, times = order) # 0 = y, i = regressor i
-    ic <- independent_columns(A, base, tol = max(tol, default_rank_tol(nrow(A), ncol(A))))
+    ic <- independent_columns(A, base,
+      tol = max(tol, default_rank_tol(nrow(A), ncol(A))),
+      block_size = q + 1L
+    )
     keep <- ic$keep
     drop <- ic$drop
+    Qbasis <- ic$Q
   } else {
     A <- matrix(0, length(rows), 0L)
     meta_lag <- meta_var <- integer(0)
     keep <- drop <- integer(0)
+    Qbasis <- NULL
   }
   col_name <- function(c) {
     if (meta_var[c] == 0L) {
@@ -82,7 +87,7 @@ durbin_design <- function(y, X, x_names, order, start = order, y_name = "y",
     ylag_pos = ylag_pos, xlag_pos = xlag_pos,
     block_end = as.integer(q + cumsum(counts)),
     dropped = vapply(drop, col_name, character(1)),
-    start = as.integer(start), order = as.integer(order)
+    start = as.integer(start), order = as.integer(order), Q = Qbasis
   )
 }
 

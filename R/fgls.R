@@ -297,6 +297,13 @@ fgls <- function(formula, data, subset, na.action = stats::na.fail,
   res <- fgls_build(spec, est, d$y, base_cov, frame$rownames)
   if (vcov_type == "bootstrap") res <- fgls_bootstrap(spec, est, res, d$y)
 
+  res$spec <- spec
+  res$internal <- est
+  attach_model_info(res, frame, d, cl, model)
+}
+
+# Model bookkeeping shared by fgls() and the benchmark estimators.
+attach_model_info <- function(res, frame, d, cl, model = TRUE) {
   res$call <- cl
   res$formula <- stats::formula(frame$terms)
   res$terms <- frame$terms
@@ -307,12 +314,8 @@ fgls <- function(formula, data, subset, na.action = stats::na.fail,
   res$xlevels <- frame$xlevels
   res$na.action <- frame$na.action
   res$index <- d$index
-  res$spec <- spec
-  res$internal <- est
-  for (nm in names(res$stages)) {
-    res$stages[[nm]][c("call", "formula", "terms", "x", "y", "contrasts", "xlevels", "index")] <-
-      res[c("call", "formula", "terms", "x", "y", "contrasts", "xlevels", "index")]
-  }
+  shared <- c("call", "formula", "terms", "x", "y", "contrasts", "xlevels", "na.action", "index")
+  for (nm in names(res$stages)) res$stages[[nm]][shared] <- res[shared]
   res
 }
 
@@ -456,7 +459,7 @@ fgls_frame <- function(formula, data, subset_expr, env, time, policy, time_serie
   } else if (is.matrix(z) || is.data.frame(z)) {
     zmat <- as.matrix(z)
     if (!is.numeric(zmat)) fgls_abort("A matrix or data frame `z` must be numeric.")
-    if (is.null(colnames(zmat))) colnames(zmat) <- paste0("z", seq_len(ncol(zmat)))
+    if (is.null(colnames(zmat))) colnames(zmat) <- sprintf("z%d", seq_len(ncol(zmat)))
   }
   if (!is.null(zmat) && nrow(zmat) != n0) {
     fgls_abort(sprintf("`z` has %d rows but the data have %d rows.", nrow(zmat), n0))
@@ -491,6 +494,9 @@ fgls_frame <- function(formula, data, subset_expr, env, time, policy, time_serie
     if (!is.null(zmat)) zmat <- zmat[keep, , drop = FALSE]
   }
   attr(mf, "terms") <- mt
+  if (!is.null(stats::model.offset(mf))) {
+    fgls_abort("Offsets are not supported; subtract the offset from the response instead.")
+  }
   yraw <- stats::model.response(mf)
   if (is.null(yraw)) fgls_abort("The formula has no response.")
   if (is.factor(yraw) || is.character(yraw) || is.logical(yraw)) {

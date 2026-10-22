@@ -48,50 +48,63 @@ column_norms <- function(X) {
 # is reported as dependent ("the lag of the constant is dropped"). The selection
 # for the first j columns does not depend on later columns.
 #
-# Returns list(keep, drop): 1-based column indices of A.
-independent_columns <- function(A, base = NULL, tol = NULL) {
+# With `block_size` the columns are processed in consecutive blocks: each block
+# is projected on the basis of the earlier kept columns with matrix-matrix
+# products (twice), then orthogonalised column by column within the block. The
+# decisions are those of the column-by-column algorithm; only the arithmetic is
+# grouped (much faster for long designs).
+#
+# Returns list(keep, drop) (1-based column indices of A) and Q, an orthonormal
+# basis of [base, A[, keep]] whose columns follow that order.
+independent_columns <- function(A, base = NULL, tol = NULL, block_size = NULL) {
   A <- as.matrix(A)
   n <- nrow(A)
   m <- ncol(A)
-  if (is.null(tol)) {
-    tol <- default_rank_tol(n, m + if (is.null(base)) 0L else ncol(base))
-  }
+  nb <- if (is.null(base)) 0L else ncol(base)
+  if (is.null(tol)) tol <- default_rank_tol(n, m + nb)
+  Qb <- if (nb > 0L) qr.Q(qr(sweep(base, 2L, column_norms(base), "/"))) else matrix(0, n, 0L)
   if (m == 0L) {
-    return(list(keep = integer(0), drop = integer(0)))
+    return(list(keep = integer(0), drop = integer(0), Q = Qb))
   }
-  if (!is.null(base) && ncol(base) > 0L) {
-    Qb <- qr.Q(qr(sweep(base, 2L, column_norms(base), "/")))
-  } else {
-    Qb <- matrix(0, n, 0L)
-  }
-  Q <- matrix(0, n, min(n, m))
-  r <- 0L
+  if (is.null(block_size)) block_size <- 1L
+  Q <- matrix(0, n, min(n, nb + m))
+  if (nb > 0L) Q[, seq_len(nb)] <- Qb
+  r <- nb
   keep <- integer(0)
   drop <- integer(0)
   norms <- column_norms(A)
-  for (j in seq_len(m)) {
-    if (!any(A[, j] != 0)) {
-      drop <- c(drop, j)
-      next
+  starts <- seq.int(1L, m, by = block_size)
+  for (s0 in starts) {
+    cols <- s0:min(m, s0 + block_size - 1L)
+    Bk <- sweep(A[, cols, drop = FALSE], 2L, norms[cols], "/")
+    zero <- colSums(A[, cols, drop = FALSE] != 0) == 0
+    if (r > 0L) {
+      Qr <- Q[, seq_len(r), drop = FALSE]
+      for (pass in 1:2) Bk <- Bk - Qr %*% crossprod(Qr, Bk) # twice is enough
     }
-    v <- A[, j] / norms[j]
-    for (pass in 1:2) { # twice is enough (Kahan-Parlett)
-      if (ncol(Qb) > 0L) v <- v - Qb %*% crossprod(Qb, v)
-      if (r > 0L) {
-        Qr <- Q[, seq_len(r), drop = FALSE]
-        v <- v - Qr %*% crossprod(Qr, v)
+    r_block <- r
+    for (i in seq_along(cols)) {
+      j <- cols[i]
+      if (zero[i]) {
+        drop <- c(drop, j)
+        next
+      }
+      v <- Bk[, i]
+      if (r > r_block) {
+        Qw <- Q[, (r_block + 1L):r, drop = FALSE]
+        for (pass in 1:2) v <- v - Qw %*% crossprod(Qw, v)
+      }
+      nv <- sqrt(sum(v * v))
+      if (nv <= tol || r >= n) {
+        drop <- c(drop, j)
+      } else {
+        r <- r + 1L
+        Q[, r] <- v / nv
+        keep <- c(keep, j)
       }
     }
-    nv <- sqrt(sum(v * v))
-    if (nv <= tol || r >= n) {
-      drop <- c(drop, j)
-    } else {
-      r <- r + 1L
-      Q[, r] <- v / nv
-      keep <- c(keep, j)
-    }
   }
-  list(keep = keep, drop = drop)
+  list(keep = keep, drop = drop, Q = Q[, seq_len(r), drop = FALSE])
 }
 
 # Numerical rank from a pivoted QR of the column-normalised matrix.

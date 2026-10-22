@@ -95,6 +95,19 @@ nested_rss <- function(design, kmax) {
   Z <- design$Z
   yv <- design$y
   p <- ncol(Z)
+  Q <- design$Q
+  if (!is.null(Q) && ncol(Q) == p) {
+    # orthonormal basis of the design, columns in design order (Gram-Schmidt)
+    r <- drop(crossprod(Q, yv))
+    res <- yv - drop(Q %*% r)
+    res <- res - drop(Q %*% crossprod(Q, res))
+    rss_full <- sum(res^2)
+    tail_ss <- rev(cumsum(rev(r^2)))
+    return(vapply(0:kmax, function(k) {
+      pk <- design$block_end[k + 1L]
+      rss_full + if (pk < p) tail_ss[pk + 1L] else 0
+    }, numeric(1)))
+  }
   qz <- qr(Z, tol = 1e-11)
   if (qz$rank == p && identical(qz$pivot, seq_len(p))) {
     r <- qr.qty(qz, yv)[seq_len(p)]

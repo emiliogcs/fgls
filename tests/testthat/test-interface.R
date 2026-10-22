@@ -49,7 +49,6 @@ test_that("missing values follow na.action", {
   expect_length(fitted(fx), 200L)
   df$y[100] <- NA
   expect_error(serial_fgls(y ~ x, data = df, na.action = stats::na.omit), class = "fgls_error_missing")
-  skip("requires the heteroskedasticity engine (Phase 3)")
   fc <- fgls(y ~ x, data = df, serial = "none", hetero = "none", na.action = stats::na.omit)
   expect_equal(fc$nobs, 196L)
 })
@@ -160,7 +159,6 @@ test_that("ts, zoo and xts data and a time index are accepted", {
     class = "fgls_warning_specification"
   )
   expect_error(serial_fgls(y ~ x, data = df[200:1, ], time = "date"), class = "fgls_error_time_index")
-  skip("requires the heteroskedasticity engine (Phase 3)")
   expect_silent(fgls(y ~ x, data = df[200:1, ], time = "date", serial = "none", hetero = "none"))
   expect_error(serial_fgls(y ~ x, data = df, time = "when"), class = "fgls_error_input")
   expect_error(serial_fgls(y ~ x, data = df, time = dates[-1]), class = "fgls_error_input")

@@ -24,7 +24,14 @@
 #' @param lambda_min_ratio Smallest penalty relative to the largest; default
 #'   `1e-4` when there are more observations than candidate covariates and
 #'   `1e-2` otherwise (as in 'glmnet').
-#' @param glmnet_thresh Convergence threshold passed to [glmnet::glmnet()].
+#' @param lasso_engine Solver of the Lasso problems: `"lars"` (default) computes
+#'   the exact solution path by the LARS homotopy with the Lasso modification,
+#'   as 'pyfgls' does; `"glmnet"` uses [glmnet::glmnet()] (coordinate descent)
+#'   followed by an exact active-set refinement. Both give the same solutions;
+#'   `"lars"` is faster for the moderate numbers of candidate covariates
+#'   typical here.
+#' @param glmnet_thresh Convergence threshold passed to [glmnet::glmnet()]
+#'   when `lasso_engine = "glmnet"`.
 #' @param delta_scale Use the scale-aware floor `delta * sigma_OLS` in
 #'   \eqn{\log\max(\hat u_t^2, \delta^2)}.
 #' @param transforms Transform families used by `z = "auto"`; see
@@ -49,7 +56,8 @@ fgls_control <- function(ic_penalty = c("order", "params"), min_lags = NULL,
                          fold_scheme = c("random", "blocked"), foldid = NULL,
                          cv_weights = c("fold", "full"),
                          ridge_scale = c("standardized", "original"),
-                         n_lambda = 100L, lambda_min_ratio = NULL, glmnet_thresh = 1e-10,
+                         n_lambda = 100L, lambda_min_ratio = NULL,
+                         lasso_engine = c("lars", "glmnet"), glmnet_thresh = 1e-7,
                          delta_scale = FALSE,
                          transforms = c("linear", "poly2", "log", "trig"),
                          svr_cost = c(0.1, 1, 10, 100), svr_epsilon = c(0.05, 0.25, 0.5, 1),
@@ -60,6 +68,7 @@ fgls_control <- function(ic_penalty = c("order", "params"), min_lags = NULL,
   fold_scheme <- arg_default(fold_scheme, c("random", "blocked"), "fold_scheme")
   cv_weights <- arg_default(cv_weights, c("fold", "full"), "cv_weights")
   ridge_scale <- arg_default(ridge_scale, c("standardized", "original"), "ridge_scale")
+  lasso_engine <- arg_default(lasso_engine, c("lars", "glmnet"), "lasso_engine")
   bootstrap <- arg_default(bootstrap, c("wild", "iid"), "bootstrap")
   wild_dist <- arg_default(wild_dist, c("rademacher", "mammen"), "wild_dist")
   bad <- setdiff(transforms, c("linear", "poly2", "log", "trig"))
@@ -85,7 +94,8 @@ fgls_control <- function(ic_penalty = c("order", "params"), min_lags = NULL,
       ic_penalty = ic_penalty, min_lags = min_lags, fold_scheme = fold_scheme,
       foldid = if (is.null(foldid)) NULL else as.integer(foldid),
       cv_weights = cv_weights, ridge_scale = ridge_scale, n_lambda = as.integer(n_lambda),
-      lambda_min_ratio = lambda_min_ratio, glmnet_thresh = glmnet_thresh,
+      lambda_min_ratio = lambda_min_ratio, lasso_engine = lasso_engine,
+      glmnet_thresh = glmnet_thresh,
       delta_scale = isTRUE(delta_scale), transforms = transforms,
       svr_cost = svr_cost, svr_epsilon = svr_epsilon, n_boot = as.integer(n_boot),
       bootstrap = bootstrap, wild_dist = wild_dist, boot_seed = boot_seed,

@@ -4,6 +4,11 @@
   "pyfgls_pin": "0.1.0",
   "python": "3.13.16",
   "scenarios": {
+    "s10_homoskedastic": {
+      "data": "s10_data.csv",
+      "json": "s10_golden.json",
+      "sha256_data": "1ea346b0f634d4ad22f070dacd0dbc62ea0bb5bb2ae5a16f0286cc40e0623f80"
+    },
     "s1_ar1_nonexog": {
       "data": "s1_data.csv",
       "json": "s1_golden.json",
@@ -33,6 +38,21 @@
       "data": "s6_data.csv",
       "json": "s6_golden.json",
       "sha256_data": "abc71cfc35e3b80685d27fcf348c60bdef62450dc02100998c5ed73b2696cab9"
+    },
+    "s7_hetero_log2": {
+      "data": "s7_data.csv",
+      "json": "s7_golden.json",
+      "sha256_data": "627390a8e905419fed5472b03b05ee08213afe0895de50431793d23d1f787736"
+    },
+    "s8_hetero_many": {
+      "data": "s8_data.csv",
+      "json": "s8_golden.json",
+      "sha256_data": "7619384274909f96ca7c2ac0f2bf8b55d089ab849c1b3399ad3f377e765e495f"
+    },
+    "s9_combined": {
+      "data": "s9_data.csv",
+      "json": "s9_golden.json",
+      "sha256_data": "efde23db25556c6704b0b862f08c667a24dc63d5bedfe2eae8c10f890f27b8b3"
     }
   },
   "scikit-learn": "1.9.1",
