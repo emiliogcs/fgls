@@ -1,0 +1,48 @@
+test_that("lsq matches lm.fit and zeroes exactly collinear columns", {
+  set.seed(1)
+  X <- cbind(1, matrix(rnorm(200), 100))
+  y <- rnorm(100)
+  expect_equal(fgls:::lsq(X, y), unname(stats::lm.fit(X, y)$coefficients), tolerance = 1e-12)
+  Xc <- cbind(X, X[, 2] + X[, 3])
+  b <- fgls:::lsq(Xc, y)
+  expect_equal(b[4], 0)
+})
+
+test_that("independent_columns drops later collinear columns in order", {
+  n <- 50
+  tt <- seq_len(n)
+  base <- cbind(1, tt)
+  A <- cbind(rep(1, n), tt - 1, rnorm(n), tt^2)
+  ic <- fgls:::independent_columns(A, base)
+  expect_equal(ic$drop, c(1L, 2L))
+  expect_equal(ic$keep, c(3L, 4L))
+  ic2 <- fgls:::independent_columns(cbind(A[, 3], 2 * A[, 3], 0))
+  expect_equal(ic2$keep, 1L)
+  expect_equal(ic2$drop, c(2L, 3L))
+  expect_equal(fgls:::independent_columns(matrix(0, 5, 0))$keep, integer(0))
+})
+
+test_that("matrix_rank and hat_diag", {
+  set.seed(2)
+  X <- cbind(1, rnorm(30), rnorm(30))
+  expect_equal(fgls:::matrix_rank(X), 3L)
+  expect_equal(fgls:::matrix_rank(cbind(X, X[, 2] * 3)), 3L)
+  h <- fgls:::hat_diag(X)
+  expect_equal(h, unname(stats::hatvalues(stats::lm(rnorm(30) ~ X - 1))), tolerance = 1e-12)
+  expect_equal(fgls:::hat_diag(cbind(X, X[, 2])), h, tolerance = 1e-10)
+  expect_equal(fgls:::hat_diag(matrix(0, 4, 0)), numeric(4))
+})
+
+test_that("inv_psd, make_psd and fallbacks", {
+  A <- crossprod(matrix(c(2, 1, 0, 1, 3, 1, 0, 1, 4), 3))
+  expect_equal(fgls:::inv_psd(A), solve(A), tolerance = 1e-12)
+  S <- matrix(c(1, 1, 1, 1), 2)
+  expect_warning(Si <- fgls:::inv_psd(S), class = "fgls_warning_collinearity")
+  expect_equal(Si %*% S %*% Si, Si, tolerance = 1e-12)
+  M <- matrix(c(1, 0, 0, -0.5), 2)
+  expect_warning(P <- fgls:::make_psd(M), class = "fgls_warning_collinearity")
+  expect_true(min(eigen(P)$values) >= 0)
+  expect_silent(fgls:::make_psd(diag(2)))
+  expect_equal(fgls:::condition_number(diag(c(1, 10))), 10)
+  expect_equal(fgls:::condition_number(diag(c(1, 0))), Inf)
+})

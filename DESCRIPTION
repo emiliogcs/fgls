@@ -28,7 +28,8 @@ Imports:
     glmnet (>= 4.1),
     graphics,
     grDevices,
-    stats
+    stats,
+    utils
 Suggests:
     broom,
     e1071,
