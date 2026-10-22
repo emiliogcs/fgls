@@ -45,8 +45,15 @@ that eq. (29) of the paper provides in the serial-only case. `fgls` adds the
 heteroskedasticity-robust analogue of that term by default when the regressors
 are declared pre-determined (`first_stage_correction = TRUE`, the default for
 `exog = "predetermined"`). With exogenous regressors it is negligible. With
-non-exogenous ones, simulations show that it is needed for correct coverage
-(`vignette("validation")`).
+non-exogenous ones it is needed for correct coverage. The package's slow Monte
+Carlo acceptance tests (`tests/testthat/test-statistical-s4.R` in the source
+package, run with `FGLS_SLOW_TESTS=true`) check this with AR(1) errors with
+coefficient 0.8, \(v(x) = x^2\), a regressor that responds to past innovations
+(\(\gamma = 0.5\) and 1) and \(T = 200\): the corrected 95% interval must cover
+between 91% and 97% of the time, and at least three percentage points more often
+than the uncorrected one. The replication notes of pyfgls report coverage of
+0.923 with the correction and 0.860 without it for \(\gamma = 1\) (1,000
+replications).
 
 ```{r first-stage}
 sim_ne <- simulate_combined(300, ar = 0.8, skedastic = "x2", gamma = 1, seed = 6)
@@ -57,15 +64,20 @@ c(with = sqrt(vcov(with_fs)[2, 2]), without = sqrt(vcov(without_fs)[2, 2]))
 
 ## No loss under homoskedasticity
 
-When the innovations are homoskedastic the Lasso typically selects nothing and
-F-CH equals F-C:
+When the innovations are homoskedastic the Lasso often selects nothing, and
+F-CH then equals F-C, as in this example:
 
 ```{r homo}
-hom <- simulate_combined(200, ar = 0.5, skedastic = "homoskedastic", seed = 7)
+hom <- simulate_combined(200, ar = 0.5, skedastic = "homoskedastic", seed = 4)
 fit_h <- fgls(y ~ x, data = hom, seed = 1)
 fit_h$skedastic$selected
 all.equal(coef(fit_h), coef(fit_h$stages$serial))
 ```
+
+In other samples it selects a few covariates by chance, and F-CH then differs
+somewhat from F-C. On average nothing is lost: in the homoskedastic row of
+Table S.9 (`vignette("validation")`) the two have essentially the same mean
+squared error and both cover close to 95%.
 
 ## Bootstrap cross-check
 
