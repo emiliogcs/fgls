@@ -1,4 +1,12 @@
-# Paper-replication (Monte Carlo) acceptance tests: slow, nightly, not on CRAN.
+# Paper-replication (Monte Carlo) acceptance tests: slow, not on CRAN.
+#
+# Runs on demand (workflow_dispatch). The nightly schedule only runs when the
+# repository variable FGLS_NIGHTLY is "true": a schedule event carries no
+# repository payload, so the job cannot tell by itself whether the repository
+# is private, and on a private repository the run (well over an hour on a
+# 2-vCPU runner) would use up the Actions minutes. After making the repository
+# public, set the variable (Settings > Secrets and variables > Actions >
+# Variables, or `gh variable set FGLS_NIGHTLY --body true`).
 on:
   schedule:
     - cron: "41 2 * * *"
@@ -10,14 +18,18 @@ permissions: read-all
 
 jobs:
   statistical:
+    if: github.event_name != 'schedule' || vars.FGLS_NIGHTLY == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
       FGLS_SLOW_TESTS: "true"
-      FGLS_SLOW_CORES: "4"
       NOT_CRAN: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      # One forked worker per core of the runner (2 on private repositories,
+      # 4 on public ones); results do not depend on it.
+      - name: Number of cores
+        run: echo "FGLS_SLOW_CORES=$(nproc)" >> "$GITHUB_ENV"
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true

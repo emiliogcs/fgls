@@ -11,6 +11,9 @@ permissions: read-all
 
 jobs:
   pkgdown:
+    # While the repository is private (GitHub Pages is not served), pushes do not
+    # build or deploy the site; releases and manual runs still do.
+    if: github.event_name != 'push' || !github.event.repository.private
     runs-on: ubuntu-latest
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
@@ -19,7 +22,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: r-lib/actions/setup-pandoc@v2
 

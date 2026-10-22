@@ -1,8 +1,9 @@
 # Monte Carlo helpers for the statistical (paper-replication) tests. These tests
 # are slow: they run only when the environment variable FGLS_SLOW_TESTS is
-# "true" (nightly workflow) and never on CRAN. FGLS_SLOW_CORES sets the number
-# of forked workers (results do not depend on it: every replication has its
-# own seed).
+# "true" (.github/workflows/statistical.yaml, on demand or nightly) and never on
+# CRAN. FGLS_SLOW_CORES sets the number of forked workers (default 1; the
+# workflow uses the runner's core count). Results do not depend on it: every
+# replication has its own seed.
 skip_if_not_slow <- function() {
   skip_on_cran()
   skip_if_not(identical(Sys.getenv("FGLS_SLOW_TESTS"), "true"), "set FGLS_SLOW_TESTS=true")
