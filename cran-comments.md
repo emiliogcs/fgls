@@ -16,7 +16,7 @@ R counterpart of the Python package 'pyfgls' (PyPI).
   (so its github.com URLs returned 404 and the pkgdown site at
   <https://emiliogcs.com/fgls/> was not yet published) when the check was run.
 * GitHub Actions, `R CMD check --as-cran` with the incoming feasibility checks disabled
-  (`_R_CHECK_CRAN_INCOMING_=false`), at commit d2abfc0: 0 errors, 0 warnings, 0 notes
+  (`_R_CHECK_CRAN_INCOMING_=false`), at commit 474d062: 0 errors, 0 warnings, 0 notes
   on macOS-latest (R release), windows-latest (R release) and ubuntu-latest (R devel,
   release, oldrel-1 and 4.1).
 * win-builder (devel, release) and R-hub v2: still to be run.
