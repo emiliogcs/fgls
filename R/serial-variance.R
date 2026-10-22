@@ -103,7 +103,6 @@ hc_weights <- function(cov_type, ehat, Xf) {
 # coefficients, NULL when rho are the coefficients on the lagged y (eq. 29).
 serial_variance <- function(Xf, ehat, uhat, design, J = NULL, cov_type = "robust") {
   n <- nrow(Xf)
-  q <- ncol(Xf)
   k <- design$order
   start <- design$start
   sigma2 <- sum(ehat^2) / n
@@ -124,33 +123,46 @@ serial_variance <- function(Xf, ehat, uhat, design, J = NULL, cov_type = "robust
     C <- influence_weights(design_prefix(design, k), J)
   }
 
-  if (cov_type == "naive") {
-    avar <- naive
-  } else if (cov_type == "robust" && is.null(J)) {
-    if (k == 0L) {
-      avar <- naive
-    } else {
-      # PG26 eq. (29), literally
+  # exogeneity-robust AVar_R of PG26 eqs. (28)-(29), literally when rho are the
+  # coefficients on the lagged y and through the influence a_t otherwise
+  robust_avar <- function() {
+    if (is.null(J)) {
+      if (k == 0L) {
+        return(naive)
+      }
       corr <- Qinv %*% G %*% inv_psd(Sigma, name = "variance of psi_t (eq. 29)") %*%
         t(G) %*% Qinv
-      avar <- sigma2 * (Qinv + make_psd(corr, name = "eq. (29) correction"))
+      return(sigma2 * (Qinv + make_psd(corr, name = "eq. (29) correction")))
     }
-  } else {
+    A <- Xf - crossprod(C, t(G))
+    Qinv %*% (sigma2 * crossprod(A) / n) %*% Qinv
+  }
+
+  if (cov_type == "naive") {
+    avar <- naive
+  } else if (cov_type == "robust") {
+    avar <- robust_avar()
+  } else if (cov_type %in% c("HC0", "HC1", "HC2", "HC3")) {
     A <- Xf - crossprod(C, t(G)) # influence a_t, rows t
-    if (cov_type == "robust") {
-      meat <- sigma2 * crossprod(A) / n
-    } else if (cov_type %in% c("HC0", "HC1", "HC2", "HC3")) {
-      w <- hc_weights(cov_type, ehat, Xf)
-      meat <- crossprod(A * w, A) / n
-    } else {
-      stop("unknown cov_type ", cov_type)
-    }
-    avar <- Qinv %*% meat %*% Qinv
+    w <- hc_weights(cov_type, ehat, Xf)
+    avar <- Qinv %*% (crossprod(A * w, A) / n) %*% Qinv
+  } else {
+    stop("unknown cov_type ", cov_type)
   }
   avar <- make_psd(avar, name = "FGLS covariance matrix")
   nm <- colnames(Xf)
   dimnames(avar) <- dimnames(naive) <- list(nm, nm)
-  correction <- if (cov_type == "robust") avar - naive else matrix(0, q, q, dimnames = list(nm, nm))
+  # The non-exogeneity diagnostic compares the robust variance of eqs. (28)-(29)
+  # with the naive one of eq. (27). It describes the data, not the variance
+  # requested, so it is computed whatever cov_type is (pyfgls reports 0 for
+  # the non-robust types).
+  avar_r <- if (cov_type == "robust") {
+    avar
+  } else {
+    make_psd(robust_avar(), name = "FGLS covariance matrix")
+  }
+  dimnames(avar_r) <- list(nm, nm)
+  correction <- avar_r - naive
   d <- diag(naive)
   by_coef <- ifelse(d > 0, diag(correction) / d, 0)
   names(by_coef) <- nm

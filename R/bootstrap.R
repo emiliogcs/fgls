@@ -7,7 +7,8 @@
 #   sieve bootstrap with the estimated AR(k*) filter,
 #   u*_t = sum_j rho_j u*_{t-j} + e*_t, with e*_t = e_t eta_t (wild, default) or
 #   resampled with replacement ("iid"); the first k* errors are the observed
-#   residuals.
+#   residuals. Not available for the GMA estimator (serial = "ma1"): a sieve
+#   with an AR filter would ignore the MA(1) structure of the errors.
 #
 # The whole estimator (lag selection, skedastic fit with cross-validation) is
 # re-run on every bootstrap sample. The regressors are held fixed, so with
@@ -68,7 +69,15 @@ fgls_bootstrap <- function(spec, est, res, y) {
     draw <- function() wild_sample(fitted, resid, ctl$wild_dist)
     label <- sprintf("bootstrap (wild, %s)", ctl$wild_dist)
   } else {
-    rho <- if (spec$serial == "ma1") numeric(0) else unname(res$serial$rho)
+    if (spec$serial == "ma1") {
+      # the sieve below would treat MA(1) errors as white noise
+      fgls_abort(paste0(
+        "vcov = \"bootstrap\" is not available with serial = \"ma1\": the sieve ",
+        "bootstrap resamples AR innovations and would ignore the MA(1) structure. ",
+        "Use vcov = \"robust\" (the GMA covariance)."
+      ))
+    }
+    rho <- unname(res$serial$rho)
     k <- length(rho)
     uhat <- y - fitted
     innov <- ar_filter(uhat, rho)

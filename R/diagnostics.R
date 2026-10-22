@@ -57,7 +57,7 @@ test_predetermined <- function(formula, data, max_lag = 4L, ar_order = NULL, kma
   n_all <- d$nobs
   X <- d$X
   if (is.null(ar_order)) {
-    km <- resolve_kmax(kmax, n_all, d$k_vars, has_const = d$has_const)
+    km <- resolve_kmax(kmax, n_all, d$k_vars, has_const = d$has_const, y = d$y, X = X)
     k <- select_ar_order(d$y, X, d$x_names, km)$order
   } else {
     if (!is_count(ar_order)) fgls_abort("`ar_order` must be a non-negative integer.")
@@ -264,7 +264,10 @@ screen_stationarity <- function(d) {
 #' * `nonexogeneity_share()`: the relative size of the first-stage correction
 #'   of PG26 eq. (29), averaged over coefficients. Values near zero mean the
 #'   regressors behave as exogenous; large values mean the naive variance (eq.
-#'   27) would understate the uncertainty.
+#'   27) would understate the uncertainty. It is computed from the robust
+#'   variance whatever `vcov` the fit uses, and is `NA` for the benchmark
+#'   estimators (see [ols_robust()]) and for `serial = "ma1"`, which do not
+#'   compute it.
 #'
 #' @param fit An `"fgls"` object (with a heteroskedasticity correction for
 #'   `weight_diagnostics()`, a serial-correlation correction otherwise).

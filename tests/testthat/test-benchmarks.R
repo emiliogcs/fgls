@@ -67,10 +67,16 @@ test_that("the Durbin estimator equals OLS on the Durbin design", {
   n <- 300
   Z <- cbind(1, sim$x[3:n], sim$y[2:(n - 1)], sim$x[2:(n - 1)], sim$y[1:(n - 2)], sim$x[1:(n - 2)])
   lmd <- stats::lm.fit(Z, sim$y[3:n])
-  expect_equal(unname(coef(du)), unname(lmd$coefficients[1:2]), tolerance = 1e-10)
-  expect_equal(unname(du$rho), unname(lmd$coefficients[c(3, 5)]), tolerance = 1e-10)
-  ref <- vcov(stats::lm(sim$y[3:n] ~ Z - 1))[1:2, 1:2]
-  expect_equal(unname(vcov(du)), unname(ref), tolerance = 1e-10)
+  cf <- unname(lmd$coefficients)
+  # the slope is the Durbin coefficient on x_t; the lags of the constant are
+  # collinear with it and dropped, so the intercept is recovered from the
+  # Durbin coefficient c on the constant as c / (1 - rho_1 - rho_2)
+  m <- 1 - cf[3] - cf[5]
+  expect_equal(unname(coef(du)), c(cf[1] / m, cf[2]), tolerance = 1e-10)
+  expect_equal(unname(du$rho), cf[c(3, 5)], tolerance = 1e-10)
+  ref <- unname(vcov(stats::lm(sim$y[3:n] ~ Z - 1)))
+  jac <- rbind(c(1 / m, 0, cf[1] / m^2, 0, cf[1] / m^2, 0), c(0, 1, 0, 0, 0, 0))
+  expect_equal(unname(vcov(du)), jac %*% ref %*% t(jac), tolerance = 1e-10)
   expect_equal(durbin_estimator(y ~ x, data = sim)$serial$ar_order, serial_fgls(y ~ x, data = sim)$ar_order)
   expect_error(durbin_estimator(y ~ x, data = sim, ar_order = -1), class = "fgls_error_input")
 })

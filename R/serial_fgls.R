@@ -9,7 +9,8 @@
 #'
 #' @inheritParams fgls
 #' @param serial `"auto"` (default), `"fixed"` or `"ma1"` (GMA estimator for
-#'   MA(1) errors, PG26 Section 5).
+#'   MA(1) errors, PG26 Section 5; its only variance is `vcov = "robust"`, the
+#'   GMA covariance \eqn{s^2 (X^{*\prime} X^*)^{-1}}).
 #' @param vcov `"robust"` (default, eq. 29), `"naive"` (eq. 27, exogenous
 #'   regressors only), `"HC0"`--`"HC3"` (eq. 29 with heteroskedasticity
 #'   weights) or `"bootstrap"` (sieve bootstrap).
