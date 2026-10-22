@@ -19,3 +19,5 @@
 ^.*\.tar\.gz$
 ^.*\.Rcheck$
 ^validation$
+^README\.html$
+^Rplots\.pdf$

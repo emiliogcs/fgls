@@ -13,3 +13,5 @@ __pycache__/
 validation/cache/
 validation/cache_dev/
 validation/*.html
+README.html
+Rplots.pdf
