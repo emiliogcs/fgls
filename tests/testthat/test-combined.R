@@ -71,7 +71,9 @@ test_that("fgls() result structure for the combined estimator", {
     expect_equal(vcov(fit, type = ct), vcov(fgls(y ~ x, data = comb, seed = 0, vcov = ct)))
   }
   expect_error(fgls(y ~ x, data = comb, vcov = "naive"), class = "fgls_error_input")
-  expect_error(vcov(fc, type = "HC0"), class = "fgls_error_input")
+  # the F-C stage recomputes robust/HC0/HC3 (test-audit-methods.R), not other types
+  expect_equal(vcov(fc, type = "HC0"), vcov(fgls(y ~ x, data = comb, seed = 0, vcov = "HC0")$stages$serial))
+  expect_error(vcov(fc, type = "naive"), class = "fgls_error_input")
 })
 
 test_that("fgls() dispatches to the right estimator", {

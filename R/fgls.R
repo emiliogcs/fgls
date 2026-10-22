@@ -143,8 +143,16 @@
 #'     (`NULL` without serial correction); more in `serial`.}
 #'   \item{`skedastic`, `weights`}{Heteroskedasticity block: selected
 #'     covariates, coefficients, \eqn{\psi}, \eqn{\lambda}, degrees of freedom,
-#'     fitted variances; `weights` are \eqn{1/\hat v_t}.}
-#'   \item{`stages`}{Intermediate estimators (`stages$serial` is F-C).}
+#'     fitted variances; `weights` are \eqn{1/\hat v_t}. For the Lasso,
+#'     `skedastic$lambda` is the selected penalty on the scale of 'glmnet',
+#'     whose objective is that of GP24 eq. (4) divided by the number of
+#'     observations \eqn{n} of the skedastic regression, and
+#'     `skedastic$lambda_paper` \eqn{= n \lambda} is the same penalty on the
+#'     scale of eq. (4). Both refer to the standardized candidate covariates.}
+#'   \item{`stages`}{Intermediate estimators (`stages$serial` is F-C). They
+#'     are `"fgls"` objects with the same methods as the final fit;
+#'     `vcov(fit$stages$serial, type =)` accepts `"robust"`, `"HC0"` and
+#'     `"HC3"`.}
 #'   \item{`nobs`, `n_eff`}{Number of observations and of observations in the
 #'     final regression (\eqn{T - k^*}).}
 #' }
@@ -302,7 +310,10 @@ fgls <- function(formula, data, subset, na.action = stats::na.fail,
   attach_model_info(res, frame, d, cl, model)
 }
 
-# Model bookkeeping shared by fgls() and the benchmark estimators.
+# Model bookkeeping shared by fgls() and the benchmark estimators. The stages of
+# a combined fit (stages$serial is F-C) receive the same model information, and
+# the F-C stage the estimates its variance needs, so that model.frame(),
+# augment(), predict() and vcov(type =) work on them as on the final fit.
 attach_model_info <- function(res, frame, d, cl, model = TRUE) {
   res$call <- cl
   res$formula <- stats::formula(frame$terms)
@@ -314,8 +325,19 @@ attach_model_info <- function(res, frame, d, cl, model = TRUE) {
   res$xlevels <- frame$xlevels
   res$na.action <- frame$na.action
   res$index <- d$index
-  shared <- c("call", "formula", "terms", "x", "y", "contrasts", "xlevels", "na.action", "index")
-  for (nm in names(res$stages)) res$stages[[nm]][shared] <- res[shared]
+  res$vcov_code <- vcov_code_of(res)
+  shared <- c(
+    "call", "formula", "terms", "model", "x", "y", "contrasts", "xlevels", "na.action", "index"
+  )
+  shared <- intersect(shared, names(res))
+  for (nm in names(res$stages)) {
+    res$stages[[nm]][shared] <- res[shared]
+    res$stages[[nm]]$stage_name <- nm
+    res$stages[[nm]]$vcov_code <- vcov_code_of(res$stages[[nm]])
+  }
+  if (!is.null(res$stages[["serial"]]) && identical(res$spec$mode, "combined")) {
+    res$stages$serial$stage_internal <- fc_stage_internal(res$internal)
+  }
   res
 }
 
