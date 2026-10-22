@@ -10,7 +10,9 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 ## Test environments
 
 * local Ubuntu 24.04, R 4.3.3 (reference BLAS): `R CMD check --as-cran` on the built
-  tarball.
+  tarball: 0 errors, 0 warnings, 1 note (CRAN incoming feasibility: maintainer and URL
+  check; the URLs could not be verified from the build machine, which has no access
+  to doi.org, orcid.org or github.com).
 * GitHub Actions (to be run once the repository is public): ubuntu-latest (R devel,
   release, oldrel-1, 4.1), macOS-latest and windows-latest (R release).
 * win-builder (devel, release) and R-hub v2: to be run before submission.

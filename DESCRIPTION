@@ -34,17 +34,15 @@ Suggests:
     broom,
     e1071,
     generics,
-    ggplot2,
     jsonlite,
     knitr,
     lmtest,
-    rmarkdown,
     parallel,
+    rmarkdown,
     sandwich,
     spelling,
     testthat (>= 3.0.0),
     tibble,
-    withr,
     xts,
     zoo
 VignetteBuilder:

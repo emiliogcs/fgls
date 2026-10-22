@@ -53,9 +53,21 @@ rel_diff <- function(a, b) {
   max(abs(a - b)) / max(max(abs(b)), .Machine$double.xmin)
 }
 
+# With FGLS_GOLDEN_LOG=<file>, every comparison is appended to that file (for reports).
+log_golden <- function(kind, lab, d, tol) {
+  f <- Sys.getenv("FGLS_GOLDEN_LOG")
+  if (nzchar(f)) {
+    cat(sprintf("%s\t%s\t%s\t%.3e\t%.1e\n", testthat::get_reporter()$.context %||% "", kind, lab, d, tol),
+      file = f, append = TRUE
+    )
+  }
+}
+`%||%` <- function(a, b) if (is.null(a)) b else a
+
 expect_rel <- function(object, expected, tol, label = NULL) {
   d <- rel_diff(object, expected)
   lab <- if (is.null(label)) deparse(substitute(object)) else label
+  log_golden("rel", lab, d, tol)
   expect(d <= tol, sprintf("%s: relative difference %.3g exceeds %.1g", lab, d, tol))
   invisible(d)
 }
@@ -65,6 +77,7 @@ expect_abs <- function(object, expected, tol, label = NULL) {
   b <- as.numeric(unlist(expected))
   d <- if (length(a) == length(b)) max(c(0, abs(a - b))) else Inf
   lab <- if (is.null(label)) deparse(substitute(object)) else label
+  log_golden("abs", lab, d, tol)
   expect(d <= tol, sprintf("%s: absolute difference %.3g exceeds %.1g", lab, d, tol))
   invisible(d)
 }
