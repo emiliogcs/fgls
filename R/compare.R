@@ -8,10 +8,13 @@
 #' Plain [stats::lm()] fits are accepted and converted to OLS with HAC
 #' (Andrews quadratic-spectral) standard errors when any other fit corrects for
 #' serial correlation, and with HC3 standard errors otherwise; override with
-#' `ols_vcov`.
+#' `ols_vcov`. Other models that inherit from `"lm"` (`glm`, multivariate
+#' `mlm` fits, weighted fits, fits with an offset, ...) are rejected, because
+#' the conversion would replace them by unweighted OLS; use [ols_robust()] for
+#' OLS with robust standard errors.
 #'
-#' @param ... `"fgls"` (or `"lm"`) objects, optionally named; the names label
-#'   the columns.
+#' @param ... `"fgls"` (or plain `"lm"`) objects, optionally named; the names
+#'   label the columns.
 #' @param level Confidence level used for the interval widths.
 #' @param ols_vcov Covariance type for `lm` fits: `NULL` (automatic), `"HAC"`,
 #'   `"NW"` or `"HC0"`--`"HC3"`.
@@ -31,11 +34,13 @@ compare_fgls <- function(..., level = 0.95, ols_vcov = NULL) {
   labels <- names(fits)
   if (is.null(labels)) labels <- rep("", length(fits))
   any_serial <- any(vapply(fits, function(f) inherits(f, "fgls") && !is.null(f$serial), logical(1)))
-  fits <- lapply(fits, function(f) {
+  fits <- lapply(seq_along(fits), function(i) {
+    f <- fits[[i]]
     if (inherits(f, "fgls")) {
       return(f)
     }
     if (inherits(f, "lm")) {
+      check_plain_lm(f, if (nzchar(labels[i])) sprintf("`%s`", labels[i]) else sprintf("fit %d", i))
       return(lm_as_fgls(f, if (is.null(ols_vcov)) (if (any_serial) "HAC" else "HC3") else ols_vcov))
     }
     fgls_abort("compare_fgls() accepts fgls and lm fits only.")
@@ -66,6 +71,36 @@ compare_fgls <- function(..., level = 0.95, ols_vcov = NULL) {
   out
 }
 
+# compare_fgls() refits an lm object by unweighted OLS from its model matrix and
+# response, so it accepts only plain lm() (or aov()) fits: no glm, mlm, weights
+# or offset, which the refit would silently drop.
+check_plain_lm <- function(f, what) {
+  why <- if (inherits(f, "glm")) {
+    "a glm fit"
+  } else if (inherits(f, "mlm")) {
+    "a multivariate lm (mlm) fit"
+  } else if (!(class(f)[1L] %in% c("lm", "aov"))) {
+    sprintf("a \"%s\" fit", class(f)[1L])
+  } else if (!is.null(stats::weights(f))) {
+    "a weighted lm fit"
+  } else if (!is.null(f$offset)) {
+    "an lm fit with an offset"
+  } else {
+    NULL
+  }
+  if (!is.null(why)) {
+    fgls_abort(sprintf(
+      paste0(
+        "compare_fgls() converts only plain lm() fits (no weights, offset or glm family) ",
+        "to OLS with robust standard errors, but %s is %s. Pass an \"fgls\" fit instead, ",
+        "e.g. ols_robust() for OLS with HAC or HC standard errors."
+      ),
+      what, why
+    ))
+  }
+  invisible(f)
+}
+
 # OLS (from an lm fit) with HAC or HC standard errors, as an "fgls"-like list.
 lm_as_fgls <- function(fit, vcov_type) {
   arg_choice(vcov_type, c("HAC", "NW", "HC0", "HC1", "HC2", "HC3"), "ols_vcov")
@@ -77,6 +112,6 @@ lm_as_fgls <- function(fit, vcov_type) {
   dimnames(o$cov) <- list(colnames(X), colnames(X))
   structure(list(
     coefficients = o$beta, vcov = o$cov, method = "OLS", vcov_type = o$label,
-    use_t = FALSE, df_resid = nrow(X) - ncol(X), serial = NULL
+    vcov_code = vcov_type, use_t = FALSE, df_resid = nrow(X) - ncol(X), serial = NULL
   ), class = "fgls")
 }
