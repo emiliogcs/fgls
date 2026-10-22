@@ -1,0 +1,40 @@
+{
+  "numpy": "2.5.4",
+  "pyfgls": "0.1.0",
+  "pyfgls_pin": "0.1.0",
+  "python": "3.13.16",
+  "scenarios": {
+    "s1_ar1_nonexog": {
+      "data": "s1_data.csv",
+      "json": "s1_golden.json",
+      "sha256_data": "205b55cccb687a8e9b699608705346f226245c96f7d2b0a85f74e003eccafd3c"
+    },
+    "s2_ar2_exog": {
+      "data": "s2_data.csv",
+      "json": "s2_golden.json",
+      "sha256_data": "5098fd9dbb1da03970a0d36a21f06b0d880ff0ec44d9e624b05f9b61099dcf6a"
+    },
+    "s3_ma1": {
+      "data": "s3_data.csv",
+      "json": "s3_golden.json",
+      "sha256_data": "546f0daaacbcbae2bcb7a615ca063edd3c28788e01d256203c0be3368f3f25eb"
+    },
+    "s4_white_noise": {
+      "data": "s4_data.csv",
+      "json": "s4_golden.json",
+      "sha256_data": "3fa6f011ddad43b42661233600a8f0a07295242d68a5ba9161b28b69085e25ca"
+    },
+    "s5_deterministic": {
+      "data": "s5_data.csv",
+      "json": "s5_golden.json",
+      "sha256_data": "23aa7312aedea14b93b854abe3f83c853f03f44d76530344b9f01c204902bfe2"
+    },
+    "s6_lagged_dep": {
+      "data": "s6_data.csv",
+      "json": "s6_golden.json",
+      "sha256_data": "abc71cfc35e3b80685d27fcf348c60bdef62450dc02100998c5ed73b2696cab9"
+    }
+  },
+  "scikit-learn": "1.9.1",
+  "scipy": "1.18.1"
+}

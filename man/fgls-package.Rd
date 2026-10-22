@@ -2,7 +2,6 @@
 % Please edit documentation in R/fgls-package.R
 \docType{package}
 \name{fgls-package}
-\alias{fgls}
 \alias{fgls-package}
 \title{fgls: Feasible GLS for serial correlation and heteroskedasticity}
 \description{

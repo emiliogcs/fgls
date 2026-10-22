@@ -39,6 +39,7 @@ Suggests:
     knitr,
     lmtest,
     rmarkdown,
+    parallel,
     sandwich,
     spelling,
     testthat (>= 3.0.0),

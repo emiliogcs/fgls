@@ -18,5 +18,6 @@
 #' @importFrom glmnet glmnet
 #' @importFrom graphics par
 #' @importFrom grDevices dev.interactive
-#' @importFrom stats coef
+#' @importFrom stats coef confint df.residual fitted formula model.frame model.matrix
+#' @importFrom stats nobs predict residuals terms vcov
 "_PACKAGE"
