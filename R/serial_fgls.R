@@ -13,7 +13,7 @@
 #' @param vcov `"robust"` (default, eq. 29), `"naive"` (eq. 27, exogenous
 #'   regressors only), `"HC0"`--`"HC3"` (eq. 29 with heteroskedasticity
 #'   weights) or `"bootstrap"` (sieve bootstrap).
-#' @param ... Further arguments passed to [fgls()], e.g. `kmax`, `ic`,
+#' @param ... Further arguments passed to [fgls()], e.g. `wallis_regressor`,
 #'   `use_t`, `time`, `control`.
 #' @return An object of class `"fgls"`; see [fgls()].
 #' @inherit fgls references
