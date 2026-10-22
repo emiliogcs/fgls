@@ -27,11 +27,12 @@ unless the model truly has none.}
 
 \item{data}{A data frame, a list, a \code{ts}/\code{mts} object, or a 'zoo'/'xts'
 object containing the variables in the formula. Rows must be in time
-order (unless \code{serial = "none"}).}
+order.}
 
 \item{max_lag}{Largest number of lags added.}
 
-\item{ar_order}{Fixed AR order (implies \code{serial = "fixed"}).}
+\item{ar_order}{Fixed AR order of the Durbin regression; \code{NULL} (default)
+selects it by BIC up to \code{kmax}.}
 
 \item{kmax}{Largest AR order considered: \code{NULL} (default,
 \eqn{\lfloor 12 (T/200)^{1/4} \rfloor}), an integer, or \code{"theory"}
@@ -47,22 +48,37 @@ all non-constant regressors).}
 
 \item{na.action}{\code{\link[stats:na.fail]{stats::na.fail()}} (default) stops on missing values;
 \code{\link[stats:na.fail]{stats::na.omit()}} or \code{\link[stats:na.fail]{stats::na.exclude()}} drop them. For time series only
-leading and trailing missing values can be dropped.}
+leading and trailing missing values can be dropped. With \code{na.exclude},
+\code{\link[=residuals]{residuals()}} and \code{\link[=fitted]{fitted()}} are padded with \code{NA} to the rows selected by
+\code{subset}, as for \code{\link[stats:lm]{stats::lm()}}.}
 
 \item{time}{Time index for data frames: the name of a \code{Date}, \code{POSIXct} or
 numeric column of \code{data}, or a vector with one value per row. It is used
-to check that rows are sorted and have no gaps.}
+to check that rows are sorted and have no gaps, and must have no missing
+values in the sample. Convert character dates first, e.g. with
+\code{\link[=as.Date]{as.Date()}} or \code{zoo::as.yearmon()}.}
 
-\item{allow_gaps}{Accept a time index with gaps (lags are then positional).}
+\item{allow_gaps}{Accept a time index with gaps, or a \code{subset} that skips
+rows (lags are then positional), with a warning.}
 
 \item{x}{A \code{"fgls_predetermined"} object.}
 
 \item{...}{Not used.}
 }
 \value{
-An object of class \code{"fgls_predetermined"}: a list with \code{table} (a
-data frame with columns \code{lags}, \code{LM}, \code{df}, \code{p.value}), \code{ar_order},
-\code{regressors}, \code{alpha}, \code{rejected} and \code{advice}.
+An object of class \code{"fgls_predetermined"}: a list with
+\itemize{
+\item \code{table}: a data frame with columns \code{lags}, \code{LM}, \code{df} and \code{p.value},
+one row per number of added lags;
+\item \code{ar_order}: the AR order of the Durbin regression;
+\item \code{regressors}: the names of the regressors whose lags were tested;
+\item \code{alpha}: the level used for the advice;
+\item \code{rejected}: \code{TRUE} if some test rejects at level \code{alpha};
+\item \code{advice}: a sentence summarizing the result;
+\item \code{scale}: the \code{scale} used, \code{"innovations"} or \code{"errors"}.
+}
+
+The print method returns \code{x} invisibly.
 }
 \description{
 \strong{Experimental.} A variable-addition LM test in the spirit of Remark 9 of

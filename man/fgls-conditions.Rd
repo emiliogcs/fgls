@@ -6,16 +6,22 @@
 \description{
 All warnings raised by the package inherit from class \code{"fgls_warning"} and
 all errors from \code{"fgls_error"}, so they can be caught or muffled as a group
-with \code{\link[=tryCatch]{tryCatch()}}, \code{\link[=withCallingHandlers]{withCallingHandlers()}} or \code{\link[=suppressWarnings]{suppressWarnings()}} (R >= 4.3
-accepts a \code{classes} argument).
+with \code{\link[=tryCatch]{tryCatch()}}, \code{\link[=withCallingHandlers]{withCallingHandlers()}} or \code{\link[=suppressWarnings]{suppressWarnings()}} (whose
+\code{classes} argument, available since R 4.0.0, filters by class).
 }
 \section{Warning classes}{
 
 \itemize{
 \item \code{fgls_warning_nonstationary}: the estimated autoregressive filter has a
 root on, inside or close to the unit circle.
-\item \code{fgls_warning_collinearity}: columns were dropped or a matrix was not
-positive definite.
+\item \code{fgls_warning_collinearity}: a matrix that should be positive definite
+was not numerically so (for example a nearly singular cross-product of
+the regressors, or a covariance matrix with a negative eigenvalue), and a
+pseudo-inverse or eigenvalue clipping was used instead. Collinear lag
+columns dropped from the Durbin regression (lags of the intercept, of a
+trend or of seasonal dummies) do not signal it: they are recorded in
+\code{fit$serial$dropped_lags} and, for serial-only fits, in the notes of
+\code{\link[=summary.fgls]{summary.fgls()}}.
 \item \code{fgls_warning_convergence}: an iterative routine did not fully converge.
 \item \code{fgls_warning_weight}: the estimated weights are extreme.
 \item \code{fgls_warning_sample_size}: the sample is small relative to the number of

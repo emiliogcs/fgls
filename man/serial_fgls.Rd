@@ -27,15 +27,20 @@ unless the model truly has none.}
 object containing the variables in the formula. Rows must be in time
 order (unless \code{serial = "none"}).}
 
-\item{subset}{Optional expression selecting rows, evaluated in \code{data}.
-For time series only a contiguous block makes sense.}
+\item{subset}{Optional expression selecting rows, evaluated in \code{data}. For
+time series without a time index (\code{time}, or a ts/zoo \code{data}) the selected
+rows must be an increasing block of consecutive rows (e.g. \code{subset = 51:200}): repeated or reversed rows are an error, and so are skipped rows
+unless \code{allow_gaps = TRUE}.}
 
 \item{na.action}{\code{\link[stats:na.fail]{stats::na.fail()}} (default) stops on missing values;
 \code{\link[stats:na.fail]{stats::na.omit()}} or \code{\link[stats:na.fail]{stats::na.exclude()}} drop them. For time series only
-leading and trailing missing values can be dropped.}
+leading and trailing missing values can be dropped. With \code{na.exclude},
+\code{\link[=residuals]{residuals()}} and \code{\link[=fitted]{fitted()}} are padded with \code{NA} to the rows selected by
+\code{subset}, as for \code{\link[stats:lm]{stats::lm()}}.}
 
 \item{serial}{\code{"auto"} (default), \code{"fixed"} or \code{"ma1"} (GMA estimator for
-MA(1) errors, PG26 Section 5).}
+MA(1) errors, PG26 Section 5; its only variance is \code{vcov = "robust"}, the
+GMA covariance \eqn{s^2 (X^{*\prime} X^*)^{-1}}).}
 
 \item{vcov}{\code{"robust"} (default, eq. 29), \code{"naive"} (eq. 27, exogenous
 regressors only), \code{"HC0"}--\code{"HC3"} (eq. 29 with heteroskedasticity
@@ -51,13 +56,13 @@ regression uses at most half of the sample as regressors.}
 \item{ic}{Lag-order criterion: \code{"bic"} (default) or \code{"aic"}.}
 
 \item{lagged_dep_vars}{Names (or positions) of model-matrix columns that are
-lags of the dependent variable.}
+lags of the dependent variable (not available with \code{serial = "ma1"}).}
 
 \item{exog}{Assumption on the regressors: \code{"predetermined"} (default) or
 \code{"exogenous"}. Estimates do not depend on it; it sets the default of
 \code{first_stage_correction} and the notes of the summary.}
 
-\item{...}{Further arguments passed to \code{\link[=fgls]{fgls()}}, e.g. \code{kmax}, \code{ic},
+\item{...}{Further arguments passed to \code{\link[=fgls]{fgls()}}, e.g. \code{wallis_regressor},
 \code{use_t}, \code{time}, \code{control}.}
 }
 \value{

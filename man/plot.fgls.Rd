@@ -15,7 +15,9 @@
 
 \item{lag.max}{Number of lags of the autocorrelation function.}
 
-\item{...}{Further graphical arguments passed to \code{\link[=plot]{plot()}}.}
+\item{...}{Further graphical arguments passed to \code{\link[=plot]{plot()}} (or
+\code{\link[stats:qqnorm]{stats::qqnorm()}} for panel 4). \code{main}, \code{xlab} and \code{ylab} replace the
+default titles and axis labels of every panel drawn.}
 }
 \value{
 \code{x}, invisibly.

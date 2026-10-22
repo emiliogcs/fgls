@@ -7,8 +7,8 @@
 compare_fgls(..., level = 0.95, ols_vcov = NULL)
 }
 \arguments{
-\item{...}{\code{"fgls"} (or \code{"lm"}) objects, optionally named; the names label
-the columns.}
+\item{...}{\code{"fgls"} (or plain \code{"lm"}) objects, optionally named; the names
+label the columns.}
 
 \item{level}{Confidence level used for the interval widths.}
 
@@ -29,7 +29,10 @@ fit.
 Plain \code{\link[stats:lm]{stats::lm()}} fits are accepted and converted to OLS with HAC
 (Andrews quadratic-spectral) standard errors when any other fit corrects for
 serial correlation, and with HC3 standard errors otherwise; override with
-\code{ols_vcov}.
+\code{ols_vcov}. Other models that inherit from \code{"lm"} (\code{glm}, multivariate
+\code{mlm} fits, weighted fits, fits with an offset, ...) are rejected, because
+the conversion would replace them by unweighted OLS; use \code{\link[=ols_robust]{ols_robust()}} for
+OLS with robust standard errors.
 }
 \examples{
 sim <- simulate_serial(300, seed = 1)

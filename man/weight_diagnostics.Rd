@@ -17,7 +17,13 @@ nonexogeneity_share(fit)
 \code{weight_diagnostics()}, a serial-correlation correction otherwise).}
 }
 \value{
-A named numeric vector, a complex vector, or a number.
+\itemize{
+\item \code{weight_diagnostics()}: a named numeric vector with elements
+\code{variance_ratio}, \code{effective_n_share} and \code{top1pct_weight_share}.
+\item \code{ar_roots()}: a complex vector with the \eqn{k^*} roots (empty when
+\eqn{k^* = 0}).
+\item \code{nonexogeneity_share()}: a single number.
+}
 }
 \description{
 \itemize{
@@ -32,7 +38,10 @@ when all lie outside the unit circle.
 \item \code{nonexogeneity_share()}: the relative size of the first-stage correction
 of PG26 eq. (29), averaged over coefficients. Values near zero mean the
 regressors behave as exogenous; large values mean the naive variance (eq.
-27) would understate the uncertainty.
+27) would understate the uncertainty. It is computed from the robust
+variance whatever \code{vcov} the fit uses, and is \code{NA} for the benchmark
+estimators (see \code{\link[=ols_robust]{ols_robust()}}) and for \code{serial = "ma1"}, which do not
+compute it.
 }
 }
 \examples{

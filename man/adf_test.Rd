@@ -18,7 +18,8 @@ adf_test(x, max_lags = NULL)
 }
 \value{
 A list of class \code{"fgls_adf"} with \code{statistic}, \code{lags}, \code{nobs},
-\code{critical_values} and \code{unit_root_rejected} (at 5\%).
+\code{critical_values} and \code{unit_root_rejected} (at 5\%). The print method
+returns \code{x} invisibly.
 }
 \description{
 The regression \eqn{\Delta x_t = a + g x_{t-1} + \sum_j c_j \Delta x_{t-j}

@@ -86,12 +86,16 @@ unless the model truly has none.}
 object containing the variables in the formula. Rows must be in time
 order (unless \code{serial = "none"}).}
 
-\item{subset}{Optional expression selecting rows, evaluated in \code{data}.
-For time series only a contiguous block makes sense.}
+\item{subset}{Optional expression selecting rows, evaluated in \code{data}. For
+time series without a time index (\code{time}, or a ts/zoo \code{data}) the selected
+rows must be an increasing block of consecutive rows (e.g. \code{subset = 51:200}): repeated or reversed rows are an error, and so are skipped rows
+unless \code{allow_gaps = TRUE}.}
 
 \item{na.action}{\code{\link[stats:na.fail]{stats::na.fail()}} (default) stops on missing values;
 \code{\link[stats:na.fail]{stats::na.omit()}} or \code{\link[stats:na.fail]{stats::na.exclude()}} drop them. For time series only
-leading and trailing missing values can be dropped.}
+leading and trailing missing values can be dropped. With \code{na.exclude},
+\code{\link[=residuals]{residuals()}} and \code{\link[=fitted]{fitted()}} are padded with \code{NA} to the rows selected by
+\code{subset}, as for \code{\link[stats:lm]{stats::lm()}}.}
 
 \item{vcov}{Covariance estimator for \code{ols_robust()}.}
 
@@ -105,9 +109,12 @@ normal inference.}
 
 \item{time}{Time index for data frames: the name of a \code{Date}, \code{POSIXct} or
 numeric column of \code{data}, or a vector with one value per row. It is used
-to check that rows are sorted and have no gaps.}
+to check that rows are sorted and have no gaps, and must have no missing
+values in the sample. Convert character dates first, e.g. with
+\code{\link[=as.Date]{as.Date()}} or \code{zoo::as.yearmon()}.}
 
-\item{allow_gaps}{Accept a time index with gaps (lags are then positional).}
+\item{allow_gaps}{Accept a time index with gaps, or a \code{subset} that skips
+rows (lags are then positional), with a warning.}
 
 \item{model}{Keep the model frame in the result.}
 
@@ -124,15 +131,18 @@ regression uses at most half of the sample as regressors.}
 
 \item{rho, omega}{Known AR coefficients or known error covariance matrix.}
 
-\item{alpha}{Level of the Breusch-Godfrey test (\code{hybrid_gls()}).}
+\item{alpha}{Level of the Breusch-Godfrey test (\code{hybrid_gls()}), strictly
+between 0 and 1.}
 
-\item{lags}{Number of lags of the Breusch-Godfrey test.}
+\item{lags}{Number of lags of the Breusch-Godfrey test, a positive integer.}
 
-\item{seed}{Optional seed for the cross-validation folds and the bootstrap.
-The session's random number generator state is restored afterwards.}
+\item{seed}{Optional seed for the random AR(1) coefficient that
+\code{hybrid_gls()} draws when the Breusch-Godfrey test rejects. The session's
+random number generator state is restored afterwards.}
 }
 \value{
-An object of class \code{"fgls"} (see \code{\link[=fgls]{fgls()}}).
+An object of class \code{"fgls"} (see \code{\link[=fgls]{fgls()}}). The non-exogeneity
+share of PG26 eq. (29) is not computed for these estimators and is \code{NA}.
 }
 \description{
 Estimators used as comparisons in the papers and in \code{\link[=compare_fgls]{compare_fgls()}}:
@@ -148,8 +158,20 @@ quadratic-spectral kernel with automatic bandwidth, the benchmark of PG26;
 two-step version estimates the AR coefficients from OLS residuals and is
 \strong{not valid with non-exogenous regressors} (PG26 Section 3); use
 \code{\link[=serial_fgls]{serial_fgls()}} instead.
-\item \code{durbin_estimator()}: the coefficients on the contemporaneous regressors
-of the Durbin regression (PG26 eq. 14), AR order by BIC unless given.
+\item \code{durbin_estimator()}: the Durbin regression (PG26 eq. 14) of \eqn{y_t}
+on \eqn{y_{t-j}}, \eqn{x_t} and \eqn{x_{t-j}}, \eqn{j = 1, \dots, k},
+with the AR order \eqn{k} chosen by BIC unless given. The coefficients
+on the stochastic regressors are those on \eqn{x_t}. Lags of the
+constant, of trends and of periodic dummies are collinear with the
+regressors and dropped, so the Durbin coefficients \eqn{c} on these
+regressors estimate \eqn{(I - \sum_j \rho_j P_j)\beta}, where the
+dropped lags are \eqn{x_{t-j} = x_t P_j} (plus kept lags). They are
+converted back to \eqn{\hat\beta = (I - \sum_j \hat\rho_j
+  P_j)^{-1} c}, e.g. \eqn{c / (1 - \sum_j \hat\rho_j)} for the
+intercept, with a delta-method covariance, and are \code{NA} (with a note)
+when that is not possible. Residuals, fitted values and predictions use
+these coefficients; \code{innovations} are the residuals of the Durbin
+regression. (The Python package 'pyfgls' reports the untransformed \eqn{c}.)
 \item \code{infeasible_gls()}: GLS with known AR coefficients (\code{rho}) or a known
 error covariance matrix (\code{omega}, up to scale); a simulation benchmark.
 \item \code{hybrid_gls()}: the hybrid OLS/GLS estimator of PG26 Supplement S-1

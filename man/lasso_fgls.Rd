@@ -24,12 +24,16 @@ unless the model truly has none.}
 object containing the variables in the formula. Rows must be in time
 order (unless \code{serial = "none"}).}
 
-\item{subset}{Optional expression selecting rows, evaluated in \code{data}.
-For time series only a contiguous block makes sense.}
+\item{subset}{Optional expression selecting rows, evaluated in \code{data}. For
+time series without a time index (\code{time}, or a ts/zoo \code{data}) the selected
+rows must be an increasing block of consecutive rows (e.g. \code{subset = 51:200}): repeated or reversed rows are an error, and so are skipped rows
+unless \code{allow_gaps = TRUE}.}
 
 \item{na.action}{\code{\link[stats:na.fail]{stats::na.fail()}} (default) stops on missing values;
 \code{\link[stats:na.fail]{stats::na.omit()}} or \code{\link[stats:na.fail]{stats::na.exclude()}} drop them. For time series only
-leading and trailing missing values can be dropped.}
+leading and trailing missing values can be dropped. With \code{na.exclude},
+\code{\link[=residuals]{residuals()}} and \code{\link[=fitted]{fitted()}} are padded with \code{NA} to the rows selected by
+\code{subset}, as for \code{\link[stats:lm]{stats::lm()}}.}
 
 \item{hetero}{Skedastic-function estimator: \code{"lasso"} (default), \code{"svr"},
 \code{"wls_s1"}, \code{"wls_s2"}, \code{"known"} or \code{"none"} (OLS with HC3 standard
@@ -43,7 +47,9 @@ bootstrap).}
 builds \eqn{\{x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\}} from every
 non-constant regressor (see \code{\link[=make_dictionary]{make_dictionary()}}); a character vector of
 regressor names; a one-sided formula evaluated in \code{data} (e.g. \code{~ x + I(x^2) + w}); or a numeric matrix / data frame with one row per row of
-\code{data}.}
+\code{data}. With \code{hetero = "wls_s1"} all candidates must be strictly positive,
+so give them explicitly, e.g. \code{z = "x"} or \code{z = ~ x + I(x^2)} for a
+positive regressor \code{x}.}
 
 \item{seed}{Optional seed for the cross-validation folds and the bootstrap.
 The session's random number generator state is restored afterwards.}

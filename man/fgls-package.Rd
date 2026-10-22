@@ -23,7 +23,7 @@ Econometric Methods}, 13(1), 29--48. \doi{10.1515/jem-2023-0007}
 Useful links:
 \itemize{
   \item \url{https://github.com/emiliogcs/fgls}
-  \item \url{https://emiliogcs.github.io/fgls/}
+  \item \url{https://emiliogcs.com/fgls/}
   \item Report bugs at \url{https://github.com/emiliogcs/fgls/issues}
 }
 

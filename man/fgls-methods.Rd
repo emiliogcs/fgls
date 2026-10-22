@@ -30,6 +30,7 @@
   se.fit = FALSE,
   interval = c("none", "confidence"),
   level = 0.95,
+  type = "response",
   na.action = stats::na.pass,
   ...
 )
@@ -54,9 +55,11 @@
 \item{type}{For \code{vcov()} and \code{confint()}: \code{NULL} (the variance chosen when
 fitting) or another variance type to compute from the stored estimates:
 \code{"robust"}, \code{"naive"}, \code{"nonrobust"}, \code{"HC0"}--\code{"HC3"} (where
-available) or \code{"bootstrap"} (re-runs the estimator). For \code{residuals()}:
-\code{"response"} (\eqn{y_t - x_t'\hat\beta}, full sample) or \code{"innovations"}
-(residuals of the final filtered and/or weighted regression).}
+available) or \code{"bootstrap"} (re-runs the estimator); see the section
+\emph{Variance types}. For \code{residuals()}: \code{"response"}
+(\eqn{y_t - x_t'\hat\beta}, full sample) or \code{"innovations"} (residuals
+of the final filtered and/or weighted regression). For \code{predict()}: only
+\code{"response"} (the mean of the response) is supported.}
 
 \item{...}{Not used.}
 
@@ -64,7 +67,9 @@ available) or \code{"bootstrap"} (re-runs the estimator). For \code{residuals()}
 
 \item{level}{Confidence level.}
 
-\item{newdata}{Optional data frame in which to look for the regressors.}
+\item{newdata}{Optional data frame in which to look for the regressors.
+Without it, predictions are for the observations of the fit, padded with
+\code{NA} for the rows dropped by \code{\link[stats:na.fail]{stats::na.exclude()}}.}
 
 \item{se.fit}{Return standard errors of the predicted means.}
 
@@ -78,7 +83,8 @@ available) or \code{"bootstrap"} (re-runs the estimator). For \code{residuals()}
 The usual values: a coefficient covariance matrix (\code{vcov}), a
 matrix of confidence limits (\code{confint}), vectors of residuals or fitted
 values, predictions (a vector, or a list/matrix with \code{se.fit}/\code{interval}),
-or the corresponding model components.
+or the corresponding model components. The \code{print()} method returns \code{x}
+invisibly.
 }
 \description{
 Standard accessors for objects returned by \code{\link[=fgls]{fgls()}}, \code{\link[=serial_fgls]{serial_fgls()}},
@@ -101,6 +107,18 @@ provides no \code{sandwich::estfun()} or \code{sandwich::bread()} methods, becau
 robust variance of PG26 eq. (29) and the bias-corrected sandwich of GP24 eq. (8)
 are not of the generic form those functions assume: \code{sandwich::vcovHAC()} and
 related functions would \emph{not} reproduce them.
+}
+
+\section{Variance types}{
+
+\code{vcov(fit, type = t)} returns the stored covariance when \code{t} is the type the
+fit was made with (e.g. \code{"robust"}, or \code{"HAC"} for \code{\link[=ols_robust]{ols_robust()}}, whose
+stored \code{vcov_type} label also shows the kernel and bandwidth). Other types
+are recomputed from the stored estimates only for fits made by \code{\link[=fgls]{fgls()}},
+\code{\link[=serial_fgls]{serial_fgls()}} and \code{\link[=lasso_fgls]{lasso_fgls()}}, and for the F-C stage of a combined fit
+(\code{fit$stages$serial}, types \code{"robust"}, \code{"HC0"} and \code{"HC3"}). The benchmark
+estimators store only the covariance they were fitted with; refit them with
+another \code{vcov} instead.
 }
 
 \examples{

@@ -11,7 +11,15 @@
 
 \method{glance}{fgls}(x, ...)
 
-\method{augment}{fgls}(x, data = NULL, newdata = NULL, ...)
+\method{augment}{fgls}(
+  x,
+  data = NULL,
+  newdata = NULL,
+  se_fit = FALSE,
+  interval = c("none", "confidence"),
+  conf.level = 0.95,
+  ...
+)
 }
 \arguments{
 \item{x}{An \code{"fgls"} object.}
@@ -22,15 +30,26 @@
 
 \item{...}{Not used.}
 
-\item{data}{Data to augment: by default the model frame.}
+\item{data}{Data to augment: by default the model frame. It must have one
+row per observation used in the fit or, for a fit with
+\code{na.action = na.exclude}, one row per row of the original data (the
+excluded rows then get \code{NA}).}
 
-\item{newdata}{Optional new data; only fitted values are added.}
+\item{newdata}{Optional new data; fitted values (and, if requested,
+standard errors and confidence limits) are added, but no residuals.}
+
+\item{se_fit}{Add the standard errors of the fitted means (\code{.se.fit}).}
+
+\item{interval}{\code{"none"} or \code{"confidence"}: add confidence limits for the
+mean of the response (\code{.lower}, \code{.upper}) at level \code{conf.level}.}
 }
 \value{
 A data frame (a tibble if 'tibble' is installed): one row per
 coefficient for \code{tidy()}, one row for \code{glance()}, one row per observation
-for \code{augment()} (columns \code{.fitted}, \code{.resid}, \code{.innovation} and, with a
-heteroskedasticity correction, \code{.weight}).
+for \code{augment()} (columns \code{.fitted}, optionally \code{.lower}, \code{.upper} and
+\code{.se.fit}, then \code{.resid}, \code{.innovation} and, with a heteroskedasticity
+correction, \code{.weight}). \code{nonexogeneity.share} in \code{glance()} is \code{NA} when
+the share was not computed.
 }
 \description{
 Methods for the 'broom' generics (from the 'generics' package), registered

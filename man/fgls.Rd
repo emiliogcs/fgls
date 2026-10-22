@@ -46,33 +46,53 @@ unless the model truly has none.}
 object containing the variables in the formula. Rows must be in time
 order (unless \code{serial = "none"}).}
 
-\item{subset}{Optional expression selecting rows, evaluated in \code{data}.
-For time series only a contiguous block makes sense.}
+\item{subset}{Optional expression selecting rows, evaluated in \code{data}. For
+time series without a time index (\code{time}, or a ts/zoo \code{data}) the selected
+rows must be an increasing block of consecutive rows (e.g. \code{subset = 51:200}): repeated or reversed rows are an error, and so are skipped rows
+unless \code{allow_gaps = TRUE}.}
 
 \item{na.action}{\code{\link[stats:na.fail]{stats::na.fail()}} (default) stops on missing values;
 \code{\link[stats:na.fail]{stats::na.omit()}} or \code{\link[stats:na.fail]{stats::na.exclude()}} drop them. For time series only
-leading and trailing missing values can be dropped.}
+leading and trailing missing values can be dropped. With \code{na.exclude},
+\code{\link[=residuals]{residuals()}} and \code{\link[=fitted]{fitted()}} are padded with \code{NA} to the rows selected by
+\code{subset}, as for \code{\link[stats:lm]{stats::lm()}}.}
 
 \item{serial}{Serial-correlation correction: \code{"auto"} (AR order by BIC,
-default), \code{"fixed"} (use \code{ar_order}), \code{"ma1"} (GMA for MA(1) errors) or
-\code{"none"}.}
+default), \code{"fixed"} (use \code{ar_order}), \code{"ma1"} (GMA for MA(1) errors; it
+does not take \code{ar_order}, \code{kmax} or \code{lagged_dep_vars}) or \code{"none"}.}
 
 \item{hetero}{Skedastic-function estimator: \code{"lasso"} (adaptive Lasso,
 default), \code{"svr"} (support vector regression, requires 'e1071'),
 \code{"wls_s1"}/\code{"wls_s2"} (the parametric fits of Romano and Wolf, 2017, on
 \eqn{\log z} or \eqn{z}), \code{"known"} (variances given in \code{variance}) or
-\code{"none"}.}
+\code{"none"}. \code{"wls_s1"} takes logs, so it needs strictly positive candidate
+covariates given explicitly in \code{z} (e.g. \code{z = "x"} for a positive
+regressor \code{x}); the cosine terms of the default \code{z = "auto"} are usually
+negative somewhere, which is an error.}
 
-\item{vcov}{Variance estimator: \code{"robust"} (default; PG26 eq. 29, GP24
-eqs. 6+8, or Supplement A.4--A.5 depending on the corrections), \code{"naive"}
-(PG26 eq. 27; serial only), \code{"nonrobust"} (heteroskedasticity only),
-\code{"HC0"}--\code{"HC3"}, or \code{"bootstrap"}. See \code{\link[=vcov.fgls]{vcov.fgls()}}.}
+\item{vcov}{Variance estimator; the default \code{"robust"} is PG26 eq. (29) with
+the serial correction only, GP24 eqs. (6) and (8) with the
+heteroskedasticity correction only, and Supplement eqs. (A.4)--(A.5) with
+both. The types available depend on the corrections:
+\itemize{
+\item serial only (\code{hetero = "none"}): \code{"robust"}, \code{"naive"} (PG26 eq. 27,
+exogenous regressors only), \code{"HC0"}--\code{"HC3"} and \code{"bootstrap"} (sieve
+bootstrap); with \code{serial = "ma1"} only \code{"robust"};
+\item heteroskedasticity only (\code{serial = "none"}): \code{"robust"}, \code{"nonrobust"},
+\code{"HC0"}--\code{"HC3"} and \code{"bootstrap"} (wild bootstrap);
+\item both (the default): \code{"robust"}, \code{"HC0"}, \code{"HC3"} and \code{"bootstrap"}
+(sieve bootstrap).
+}
+
+Any other choice is an error. See \code{\link[=vcov.fgls]{vcov.fgls()}}.}
 
 \item{z}{Candidate covariates of the skedastic function: \code{"auto"} (default)
 builds \eqn{\{x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\}} from every
 non-constant regressor (see \code{\link[=make_dictionary]{make_dictionary()}}); a character vector of
 regressor names; a one-sided formula evaluated in \code{data} (e.g. \code{~ x + I(x^2) + w}); or a numeric matrix / data frame with one row per row of
-\code{data}.}
+\code{data}. With \code{hetero = "wls_s1"} all candidates must be strictly positive,
+so give them explicitly, e.g. \code{z = "x"} or \code{z = ~ x + I(x^2)} for a
+positive regressor \code{x}.}
 
 \item{ar_order}{Fixed AR order (implies \code{serial = "fixed"}).}
 
@@ -84,7 +104,7 @@ regression uses at most half of the sample as regressors.}
 \item{ic}{Lag-order criterion: \code{"bic"} (default) or \code{"aic"}.}
 
 \item{lagged_dep_vars}{Names (or positions) of model-matrix columns that are
-lags of the dependent variable.}
+lags of the dependent variable (not available with \code{serial = "ma1"}).}
 
 \item{wallis_regressor}{Regressor used for the Wallis recovery of the AR
 coefficients: \code{"auto"} (largest Durbin \eqn{|t|}), \code{"median"}, or a name.}
@@ -98,7 +118,10 @@ eq. (29) to the variance of the combined estimator. Default \code{TRUE} when
 \code{exog = "predetermined"}.}
 
 \item{variance}{Known error variances for \code{hetero = "known"}: a numeric
-vector with one value per observation, or a function of the model matrix.}
+vector with one value per row of \code{data}, whose values are selected by
+\code{subset} and \code{na.action} together with the rows of the data (a vector with
+one value per observation used is also accepted); or a function of the
+model matrix returning one value per observation used.}
 
 \item{delta}{Floor in \eqn{\log\max(\hat u_t^2, \delta^2)}, in the units of
 the response (default 0.1, as in the paper).}
@@ -123,9 +146,12 @@ normal inference.}
 
 \item{time}{Time index for data frames: the name of a \code{Date}, \code{POSIXct} or
 numeric column of \code{data}, or a vector with one value per row. It is used
-to check that rows are sorted and have no gaps.}
+to check that rows are sorted and have no gaps, and must have no missing
+values in the sample. Convert character dates first, e.g. with
+\code{\link[=as.Date]{as.Date()}} or \code{zoo::as.yearmon()}.}
 
-\item{allow_gaps}{Accept a time index with gaps (lags are then positional).}
+\item{allow_gaps}{Accept a time index with gaps, or a \code{subset} that skips
+rows (lags are then positional), with a warning.}
 
 \item{check_stationarity}{Screen the response and the regressors with
 augmented Dickey-Fuller tests and warn when a unit root is not rejected.}
@@ -153,8 +179,16 @@ regression.}
 (\code{NULL} without serial correction); more in \code{serial}.}
 \item{\code{skedastic}, \code{weights}}{Heteroskedasticity block: selected
 covariates, coefficients, \eqn{\psi}, \eqn{\lambda}, degrees of freedom,
-fitted variances; \code{weights} are \eqn{1/\hat v_t}.}
-\item{\code{stages}}{Intermediate estimators (\code{stages$serial} is F-C).}
+fitted variances; \code{weights} are \eqn{1/\hat v_t}. For the Lasso,
+\code{skedastic$lambda} is the selected penalty on the scale of 'glmnet',
+whose objective is that of GP24 eq. (4) divided by the number of
+observations \eqn{n} of the skedastic regression, and
+\code{skedastic$lambda_paper} \eqn{= n \lambda} is the same penalty on the
+scale of eq. (4). Both refer to the standardized candidate covariates.}
+\item{\code{stages}}{Intermediate estimators (\code{stages$serial} is F-C). They
+are \code{"fgls"} objects with the same methods as the final fit;
+\code{vcov(fit$stages$serial, type =)} accepts \code{"robust"}, \code{"HC0"} and
+\code{"HC3"}.}
 \item{\code{nobs}, \code{n_eff}}{Number of observations and of observations in the
 final regression (\eqn{T - k^*}).}
 }

@@ -30,3 +30,25 @@ First release. A port of the Python package 'pyfgls' (0.1.0), validated against 
   `weight_diagnostics()`, `ar_roots()`, `nonexogeneity_share()`.
 * Simulation designs of both papers: `simulate_serial()`, `simulate_hetero()`,
   `simulate_combined()`, `simulate_predictive()`.
+
+## Differences from pyfgls 0.1.0
+
+Estimates and default variances agree with pyfgls (see `vignette("validation")`).
+Elsewhere the R package deliberately differs:
+
+* `nonexogeneity_share` is computed from the robust variance (PG26 eqs. 28-29)
+  whatever `vcov` is requested (pyfgls reports 0 for non-robust types), and is
+  `NA` for the benchmark estimators and the GMA estimator, which do not compute
+  it.
+* `durbin_estimator()` recovers the coefficients on regressors whose lags are
+  collinear with the regressors (constant, trends, periodic dummies) as
+  \((I - \sum_j \rho_j P_j)^{-1} c\), e.g. \(c / (1 - \sum_j \rho_j)\) for the
+  intercept; pyfgls reports the Durbin coefficient \(c\).
+* The `kmax` cap and the `ar_order` check count the Durbin regressors that are
+  actually kept, so dropped lags of trends and seasonal dummies no longer shrink
+  `kmax`. Without such columns the cap is the pyfgls one.
+* `serial = "ma1"` rejects `ar_order`, `kmax`, `lagged_dep_vars` and
+  `vcov = "bootstrap"` instead of ignoring them.
+* Formula-interface behaviour with no pyfgls counterpart: `subset`, `na.action`
+  (including `na.exclude` padding), row-numbered error messages, and checks of
+  time-series row order and time indexes.
