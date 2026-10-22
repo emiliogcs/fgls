@@ -152,3 +152,47 @@ test_that("golden s3: GMA for MA(1) errors", {
   expect_rel(coef(fit), r$beta, golden_tol$gma_theta, "GMA beta")
   expect_rel(vcov(fit), as_mat(r$vcov, 2, 2), golden_tol$gma_theta, "GMA vcov")
 })
+
+test_that("golden s1: benchmark estimators agree with pyfgls.benchmarks", {
+  skip_if_no_golden()
+  g <- read_golden("s1")
+  b <- g$res$benchmarks
+  tol <- golden_tol$serial
+  for (ct in c("HAC", "NW", "HC3")) {
+    f <- ols_robust(y ~ x, data = g$data, vcov = ct)
+    r <- b[[paste0("ols_", ct)]]
+    expect_rel(coef(f), r$params, tol, paste("OLS", ct, "beta"))
+    expect_rel(vcov(f), as_mat(r$cov, 2, 2), tol, paste("OLS", ct, "vcov"))
+  }
+  co <- cochrane_orcutt(y ~ x, data = g$data)
+  expect_rel(coef(co), b$co$params, tol, "CO beta")
+  expect_rel(vcov(co), as_mat(b$co$cov, 2, 2), tol, "CO vcov")
+  expect_rel(co$rho, b$co$rho, tol, "CO rho")
+  ci <- cochrane_orcutt(y ~ x, data = g$data, iterate = TRUE)
+  expect_rel(coef(ci), b$co_iter$params, 1e-6, "iterated CO beta (convergence tol 1e-8)")
+  du <- durbin_estimator(y ~ x, data = g$data)
+  expect_rel(coef(du), b$durbin$params, tol, "Durbin beta")
+  expect_rel(vcov(du), as_mat(b$durbin$cov, 2, 2), tol, "Durbin vcov")
+  ig <- infeasible_gls(y ~ x, data = g$data, rho = 0.8)
+  expect_rel(coef(ig), b$gls_rho$params, tol, "GLS beta")
+  expect_rel(vcov(ig), as_mat(b$gls_rho$cov, 2, 2), tol, "GLS vcov")
+})
+
+test_that("golden s1: diagnostics agree with pyfgls.diagnostics", {
+  skip_if_no_golden()
+  g <- read_golden("s1")
+  dg <- g$res$diagnostics
+  for (sc in c("innovations", "errors")) {
+    t <- suppressWarnings(test_predetermined(y ~ x, data = g$data, scale = sc))
+    r <- dg[[paste0("predetermined_", sc)]]
+    expect_identical(t$ar_order, as.integer(r$ar_order))
+    expect_rel(t$table$LM, r$LM, golden_tol$serial, paste(sc, "LM"))
+    expect_identical(t$table$df, as.integer(r$df))
+    expect_rel(t$table$p.value, r$pvalue, golden_tol$serial, paste(sc, "p-value"))
+  }
+  a <- adf_test(g$data$y)
+  expect_rel(a$statistic, dg$adf_y$statistic, golden_tol$serial, "ADF y")
+  expect_identical(a$lags, as.integer(dg$adf_y$lags))
+  expect_identical(adf_test(g$data$x)$lags, as.integer(dg$adf_x$lags))
+  expect_rel(adf_test(g$data$x)$statistic, dg$adf_x$statistic, golden_tol$serial, "ADF x")
+})

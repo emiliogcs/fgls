@@ -13,7 +13,8 @@ fgls_control(
   ridge_scale = c("standardized", "original"),
   n_lambda = 100L,
   lambda_min_ratio = NULL,
-  glmnet_thresh = 1e-10,
+  lasso_engine = c("lars", "glmnet"),
+  glmnet_thresh = 1e-07,
   delta_scale = FALSE,
   transforms = c("linear", "poly2", "log", "trig"),
   svr_cost = c(0.1, 1, 10, 100),
@@ -55,7 +56,15 @@ weights: \code{"standardized"} (default) or \code{"original"} units of \code{z}.
 \code{1e-4} when there are more observations than candidate covariates and
 \code{1e-2} otherwise (as in 'glmnet').}
 
-\item{glmnet_thresh}{Convergence threshold passed to \code{\link[glmnet:glmnet]{glmnet::glmnet()}}.}
+\item{lasso_engine}{Solver of the Lasso problems: \code{"lars"} (default) computes
+the exact solution path by the LARS homotopy with the Lasso modification,
+as 'pyfgls' does; \code{"glmnet"} uses \code{\link[glmnet:glmnet]{glmnet::glmnet()}} (coordinate descent)
+followed by an exact active-set refinement. Both give the same solutions;
+\code{"lars"} is faster for the moderate numbers of candidate covariates
+typical here.}
+
+\item{glmnet_thresh}{Convergence threshold passed to \code{\link[glmnet:glmnet]{glmnet::glmnet()}}
+when \code{lasso_engine = "glmnet"}.}
 
 \item{delta_scale}{Use the scale-aware floor \code{delta * sigma_OLS} in
 \eqn{\log\max(\hat u_t^2, \delta^2)}.}
@@ -91,8 +100,11 @@ fgls_control(ic_penalty = "params", n_boot = 199)
 }
 \seealso{
 Other fgls: 
+\code{\link{compare_fgls}()},
 \code{\link{fgls}()},
 \code{\link{fgls-methods}},
+\code{\link{lasso_fgls}()},
+\code{\link{plot.fgls}()},
 \code{\link{serial_fgls}()},
 \code{\link{summary.fgls}()}
 }

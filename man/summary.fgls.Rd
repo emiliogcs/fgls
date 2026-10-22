@@ -49,9 +49,12 @@ s$coefficients
 }
 \seealso{
 Other fgls: 
+\code{\link{compare_fgls}()},
 \code{\link{fgls}()},
 \code{\link{fgls-methods}},
 \code{\link{fgls_control}()},
+\code{\link{lasso_fgls}()},
+\code{\link{plot.fgls}()},
 \code{\link{serial_fgls}()}
 }
 \concept{fgls}
