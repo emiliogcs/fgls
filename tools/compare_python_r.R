@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Cross-language validation of fgls against pyfgls (CLAUDE_R_PACKAGE.md, Section 3.4).
+# Cross-language validation of fgls against pyfgls (see tools/README.md).
 #
 # Both implementations fit the *same* simulated data sets with the *same*
 # cross-validation folds; R generates both (R's random number generator), so a

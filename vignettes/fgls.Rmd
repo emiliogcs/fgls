@@ -120,8 +120,12 @@ serial_fgls(y ~ x, data = df, time = "date")$ar_order
 * Declare lagged dependent variables among the regressors in `lagged_dep_vars`.
 * For errors known to be MA(1), such as multi-step forecast errors, use
   `serial = "ma1"`.
-* `exog = "exogenous"` only changes the notes and the default of the first-stage
-  correction in the combined estimator; the robust variance is valid either way.
+* `exog = "exogenous"` never changes the estimates. In the serial-only
+  estimator it only changes the notes, and the robust variance is valid either
+  way. In the combined estimator it also drops the first-stage correction from
+  the variance by default (`first_stage_correction = FALSE`); that correction is
+  needed when the regressors are only pre-determined, so keep the default
+  `exog = "predetermined"` unless they are known to be exogenous.
 
 See `vignette("serial-correlation")`, `vignette("heteroskedasticity")` and
 `vignette("combined")` for the methods in more detail.

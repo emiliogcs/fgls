@@ -83,7 +83,7 @@ for (id in c("s7", "s8", "s10")) {
       # pyfgls solves the Lasso by scikit-learn's LARS, which stops once the
       # penalty falls below float32 epsilon (~1.19e-7, an absolute threshold)
       # and then reuses the last knot's coefficients: its CV errors are not the
-      # exact Lasso errors there (pyfgls issue, see tools/README-validation.md).
+      # exact Lasso errors there (pyfgls issue, see tools/README.md).
       # Compare where the reference is valid; R's solutions satisfy the KKT
       # conditions everywhere (test-hetero.R).
       ok <- p$lambda >= .lars_valid_lambda

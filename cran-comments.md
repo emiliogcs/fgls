@@ -10,12 +10,16 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 ## Test environments
 
 * local Ubuntu 24.04, R 4.3.3 (reference BLAS): `R CMD check --as-cran` on the built
-  tarball: 0 errors, 0 warnings, 1 note (CRAN incoming feasibility: maintainer and URL
-  check; the URLs could not be verified from the build machine, which has no access
-  to doi.org, orcid.org or github.com).
-* GitHub Actions (to be run once the repository is public): ubuntu-latest (R devel,
-  release, oldrel-1, 4.1), macOS-latest and windows-latest (R release).
-* win-builder (devel, release) and R-hub v2: to be run before submission.
+  tarball: 0 errors, 0 warnings, 1 note (CRAN incoming feasibility: maintainer and
+  URL check). The URLs could not all be verified from the build machine: doi.org and
+  orcid.org were not reachable from it, and the GitHub repository was still private
+  (so its github.com URLs returned 404 and the pkgdown site at
+  <https://emiliogcs.com/fgls/> was not yet published) when the check was run.
+* GitHub Actions, `R CMD check --as-cran` with the incoming feasibility checks disabled
+  (`_R_CHECK_CRAN_INCOMING_=false`), at commit d2abfc0: 0 errors, 0 warnings, 0 notes
+  on macOS-latest (R release), windows-latest (R release) and ubuntu-latest (R devel,
+  release, oldrel-1 and 4.1).
+* win-builder (devel, release) and R-hub v2: still to be run.
 
 ## R CMD check results
 

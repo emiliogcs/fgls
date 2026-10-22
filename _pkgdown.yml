@@ -1,4 +1,4 @@
-url: https://emiliogcs.github.io/fgls/
+url: https://emiliogcs.com/fgls/
 template:
   bootstrap: 5
   math-rendering: mathjax
@@ -15,7 +15,7 @@ articles:
   - title: Getting started
     navbar: ~
     contents:
-      - fgls-intro
+      - fgls
   - title: Methods
     navbar: Methods
     contents:

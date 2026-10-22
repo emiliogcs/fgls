@@ -23,6 +23,11 @@
 #' regressors (the literal reading of Remark 9).
 #'
 #' @inheritParams fgls
+#' @param data A data frame, a list, a `ts`/`mts` object, or a 'zoo'/'xts'
+#'   object containing the variables in the formula. Rows must be in time
+#'   order.
+#' @param ar_order Fixed AR order of the Durbin regression; `NULL` (default)
+#'   selects it by BIC up to `kmax`.
 #' @param max_lag Largest number of lags added.
 #' @param regressors Names of the regressors whose lags are tested (default:
 #'   all non-constant regressors).
@@ -30,9 +35,17 @@
 #' @param scale `"innovations"` (default) or `"errors"`.
 #' @param x A `"fgls_predetermined"` object.
 #' @param ... Not used.
-#' @return An object of class `"fgls_predetermined"`: a list with `table` (a
-#'   data frame with columns `lags`, `LM`, `df`, `p.value`), `ar_order`,
-#'   `regressors`, `alpha`, `rejected` and `advice`.
+#' @return An object of class `"fgls_predetermined"`: a list with
+#'   * `table`: a data frame with columns `lags`, `LM`, `df` and `p.value`,
+#'     one row per number of added lags;
+#'   * `ar_order`: the AR order of the Durbin regression;
+#'   * `regressors`: the names of the regressors whose lags were tested;
+#'   * `alpha`: the level used for the advice;
+#'   * `rejected`: `TRUE` if some test rejects at level `alpha`;
+#'   * `advice`: a sentence summarizing the result;
+#'   * `scale`: the `scale` used, `"innovations"` or `"errors"`.
+#'
+#'   The print method returns `x` invisibly.
 #' @inherit fgls references
 #' @family diagnostics
 #' @export
@@ -169,7 +182,8 @@ print.fgls_predetermined <- function(x, ...) {
 #' @param x A numeric vector (a time series).
 #' @param max_lags Largest number of lagged differences.
 #' @return A list of class `"fgls_adf"` with `statistic`, `lags`, `nobs`,
-#'   `critical_values` and `unit_root_rejected` (at 5%).
+#'   `critical_values` and `unit_root_rejected` (at 5%). The print method
+#'   returns `x` invisibly.
 #' @family diagnostics
 #' @export
 #' @examples
@@ -271,7 +285,12 @@ screen_stationarity <- function(d) {
 #'
 #' @param fit An `"fgls"` object (with a heteroskedasticity correction for
 #'   `weight_diagnostics()`, a serial-correlation correction otherwise).
-#' @return A named numeric vector, a complex vector, or a number.
+#' @return
+#' * `weight_diagnostics()`: a named numeric vector with elements
+#'   `variance_ratio`, `effective_n_share` and `top1pct_weight_share`.
+#' * `ar_roots()`: a complex vector with the \eqn{k^*} roots (empty when
+#'   \eqn{k^* = 0}).
+#' * `nonexogeneity_share()`: a single number.
 #' @family diagnostics
 #' @export
 #' @examples

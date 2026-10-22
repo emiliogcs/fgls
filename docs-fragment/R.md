@@ -15,5 +15,5 @@ serial_fgls(y ~ x, data = df)            # serial correlation only
 lasso_fgls(y ~ x, data = df)             # heteroskedasticity only
 ```
 
-Documentation: <https://emiliogcs.github.io/fgls/> · Source:
+Documentation: <https://emiliogcs.com/fgls/> · Source:
 <https://github.com/emiliogcs/fgls>

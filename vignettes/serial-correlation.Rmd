@@ -122,7 +122,10 @@ fit_dyn$rho
 ```
 
 Without the declaration, `fgls()` warns that a regressor looks like a lagged
-dependent variable.
+dependent variable. Once the selected AR order reaches the lag in question, the
+lagged \(y\) of the Durbin regression is collinear with that regressor, and the
+fit stops with an error asking for `lagged_dep_vars`; with the data above,
+`serial_fgls(y ~ ylag + w, data = dyn)` fails in this way.
 
 ## MA(1) errors
 

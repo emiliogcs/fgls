@@ -38,5 +38,5 @@
     "https://doi.org/10.1016/j.jeconom.2026.106346",
     "https://doi.org/10.1515/jem-2023-0007"
   ],
-  "relatedLink": ["https://pypi.org/project/pyfgls/", "https://emiliogcs.com/code/"]
+  "relatedLink": ["https://emiliogcs.com/fgls/", "https://pypi.org/project/pyfgls/", "https://emiliogcs.com/code/"]
 }
