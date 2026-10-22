@@ -1,0 +1,53 @@
+Package: fgls
+Type: Package
+Title: Feasible GLS for Serial Correlation and Heteroskedasticity
+Version: 0.0.0.9000
+Authors@R:
+    person("Emilio", "González-Coya", , "emiliogc@bu.edu", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0009-0001-0362-8843"))
+Description: Feasible generalized least squares (FGLS) estimators for linear
+    regressions whose errors are serially correlated, heteroskedastic of
+    unknown form, or both. Serial correlation is handled by the
+    autoregressive filter of Perron and González-Coya (2026)
+    <doi:10.1016/j.jeconom.2026.106346>, estimated from a Durbin regression
+    whose order is chosen by an information criterion, with a variance
+    estimator that stays valid when the regressors are only pre-determined
+    rather than strictly exogenous. Heteroskedasticity is handled by the
+    adaptive Lasso estimate of the skedastic function of González-Coya and
+    Perron (2024) <doi:10.1515/jem-2023-0007>, with a bias-corrected sandwich
+    variance. Both corrections can be combined. Benchmark estimators (ordinary
+    least squares with heteroskedasticity and autocorrelation consistent
+    standard errors, Cochrane-Orcutt, infeasible GLS) and the simulation
+    designs of both papers are included.
+License: MIT + file LICENSE
+URL: https://github.com/emiliogcs/fgls, https://emiliogcs.github.io/fgls/
+BugReports: https://github.com/emiliogcs/fgls/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    glmnet (>= 4.1),
+    graphics,
+    grDevices,
+    stats
+Suggests:
+    broom,
+    e1071,
+    generics,
+    ggplot2,
+    jsonlite,
+    knitr,
+    lmtest,
+    rmarkdown,
+    sandwich,
+    spelling,
+    testthat (>= 3.0.0),
+    withr,
+    xts,
+    zoo
+VignetteBuilder:
+    knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1

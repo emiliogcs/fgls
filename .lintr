@@ -1,0 +1,8 @@
+linters: linters_with_defaults(
+    line_length_linter(100),
+    object_name_linter(styles = c("snake_case", "symbols", "CamelCase")),
+    cyclocomp_linter = NULL,
+    object_length_linter(40)
+  )
+exclusions: list("tools", "data-raw", "tests/testthat/fixtures")
+encoding: "UTF-8"

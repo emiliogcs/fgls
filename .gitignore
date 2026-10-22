@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+docs/
+inst/doc
+/doc/
+/Meta/
+*.tar.gz
+*.Rcheck/
+__pycache__/
+.DS_Store

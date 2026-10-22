@@ -1,0 +1,4 @@
+url: https://emiliogcs.github.io/fgls/
+template:
+  bootstrap: 5
+  math-rendering: mathjax
