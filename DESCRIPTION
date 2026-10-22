@@ -20,7 +20,7 @@ Description: Feasible generalized least squares (FGLS) estimators for linear
     standard errors, Cochrane-Orcutt, infeasible GLS) and the simulation
     designs of both papers are included.
 License: MIT + file LICENSE
-URL: https://github.com/emiliogcs/fgls, https://emiliogcs.github.io/fgls/
+URL: https://github.com/emiliogcs/fgls, https://emiliogcs.com/fgls/
 BugReports: https://github.com/emiliogcs/fgls/issues
 Depends:
     R (>= 4.1.0)
