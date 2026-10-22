@@ -58,7 +58,7 @@ estimate_serial <- function(y, X, x_names = colnames(X), y_name = "y", has_const
   q <- ncol(X)
   selection <- NULL
   if (is.null(ar_order)) {
-    km <- resolve_kmax(kmax, n, q, has_const = has_const)
+    km <- resolve_kmax(kmax, n, q, has_const = has_const, y = y, X = X)
     selection <- select_ar_order(y, X, x_names, km,
       ic = ic, min_lags = resolve_min_lags(min_lags, n),
       y_name = y_name, ic_penalty = ic_penalty
@@ -85,19 +85,14 @@ estimate_serial <- function(y, X, x_names = colnames(X), y_name = "y", has_const
       )
     }
     if (k > selection$kmax) { # min_lags above kmax: cap by what the sample supports
-      k <- resolve_kmax(k, n, q, has_const = has_const)
+      k <- resolve_kmax(k, n, q, has_const = has_const, y = y, X = X)
     }
   } else {
     if (!is_count(ar_order)) {
       fgls_abort(sprintf("`ar_order` must be a non-negative integer, got %s.", format(ar_order)))
     }
     k <- as.integer(ar_order)
-    if (n_durbin_regressors(q, k, has_const) >= n - k) {
-      fgls_abort(
-        sprintf("ar_order = %d is too large for T = %d observations and %d regressors.", k, n, q),
-        "insufficient_data"
-      )
-    }
+    check_ar_order(k, y, X, has_const)
   }
 
   design <- durbin_design(y, X, x_names, k, start = k, y_name = y_name)

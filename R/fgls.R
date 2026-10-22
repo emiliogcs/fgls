@@ -321,7 +321,9 @@ attach_model_info <- function(res, frame, d, cl, model = TRUE) {
 
 allowed_vcov <- function(mode, serial = "auto") {
   if (mode == "serial" && serial == "ma1") {
-    return(c("robust", "bootstrap"))
+    # only the GMA covariance: the sieve bootstrap resamples AR innovations and
+    # would ignore the MA(1) structure of the errors
+    return("robust")
   }
   switch(mode,
     serial = c(serial_cov_types, "bootstrap"),

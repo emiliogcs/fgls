@@ -171,8 +171,15 @@ test_that("golden s1: benchmark estimators agree with pyfgls.benchmarks", {
   ci <- cochrane_orcutt(y ~ x, data = g$data, iterate = TRUE)
   expect_rel(coef(ci), b$co_iter$params, 1e-6, "iterated CO beta (convergence tol 1e-8)")
   du <- durbin_estimator(y ~ x, data = g$data)
-  expect_rel(coef(du), b$durbin$params, tol, "Durbin beta")
-  expect_rel(vcov(du), as_mat(b$durbin$cov, 2, 2), tol, "Durbin vcov")
+  # pyfgls reports the untransformed Durbin coefficient c on the constant
+  # (whose lags are dropped as collinear); fgls recovers the intercept as
+  # c / (1 - sum(rho)), so the intercept is compared with the transformed pyfgls
+  # value, and the slope and its variance directly
+  expect_rel(coef(du)[["x"]], b$durbin$params[2], tol, "Durbin beta (x)")
+  expect_rel(coef(du)[["(Intercept)"]], b$durbin$params[1] / (1 - sum(b$durbin$rho)), tol,
+    "Durbin intercept, c / (1 - sum(rho))"
+  )
+  expect_rel(vcov(du)["x", "x"], as_mat(b$durbin$cov, 2, 2)[2, 2], tol, "Durbin var(x)")
   ig <- infeasible_gls(y ~ x, data = g$data, rho = 0.8)
   expect_rel(coef(ig), b$gls_rho$params, tol, "GLS beta")
   expect_rel(vcov(ig), as_mat(b$gls_rho$cov, 2, 2), tol, "GLS vcov")

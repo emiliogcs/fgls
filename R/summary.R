@@ -71,7 +71,8 @@ summary_info <- function(x) {
       } else {
         "-"
       }
-      info[["Non-exogeneity share"]] <- sprintf("%.3f", s$nonexogeneity_share)
+      share <- s$nonexogeneity_share
+      info[["Non-exogeneity share"]] <- if (is.na(share)) "-" else sprintf("%.3f", share)
       if (length(s$lagged_dep_vars)) {
         info[["Lagged dep. vars"]] <- paste(s$lagged_dep_vars, collapse = ", ")
       }

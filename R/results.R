@@ -118,8 +118,8 @@ build_gma <- function(spec, est, y, rn) {
   info <- list(
     ar_order = 0L, rho = stats::setNames(numeric(0), character(0)), method = "ma1",
     kmax = NA_integer_, ic_path = NULL, durbin_coef = NULL, dropped_lags = character(0),
-    nonexogeneity_by_coef = stats::setNames(numeric(q), spec$x_names),
-    nonexogeneity_share = 0, lagged_dep_vars = character(0),
+    nonexogeneity_by_coef = stats::setNames(rep(NA_real_, q), spec$x_names),
+    nonexogeneity_share = NA_real_, lagged_dep_vars = character(0), # not computed for GMA
     wallis_regressors = character(0), ar_roots = complex(0),
     extra = list(theta = est$theta, durbin_order = est$durbin_order)
   )
