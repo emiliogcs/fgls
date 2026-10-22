@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-conditions.R
 \name{fgls-conditions}
 \alias{fgls-conditions}
-\title{Conditions signalled by fgls}
+\title{Conditions signaled by fgls}
 \description{
 All warnings raised by the package inherit from class \code{"fgls_warning"} and
 all errors from \code{"fgls_error"}, so they can be caught or muffled as a group
@@ -35,3 +35,14 @@ dependent variable (also a specification warning).
 \code{fgls_error_insufficient_data}.
 }
 
+\examples{
+# an interior missing value in a time series is an error of class fgls_error_missing
+df <- data.frame(y = c(1, 2, NA, 4, 5, 3, 2), x = c(2, 1, 3, 5, 4, 2, 1))
+tryCatch(serial_fgls(y ~ x, data = df), fgls_error = function(e) class(e)[1])
+
+# warnings can be caught by class too
+withCallingHandlers(
+  serial_fgls(y ~ x - 1, data = simulate_serial(100, seed = 1)),
+  fgls_warning_specification = function(w) invokeRestart("muffleWarning")
+)$ar_order
+}

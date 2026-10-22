@@ -1,0 +1,85 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.path = "man/figures/README-")
+```
+
+# fgls
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/emiliogcs/fgls/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/emiliogcs/fgls/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+**fgls** estimates linear regressions by feasible generalized least squares
+when the errors are serially correlated, heteroskedastic of unknown form, or
+both:
+
+* **Serial correlation** (Perron and González-Coya, 2026). An AR filter is
+  estimated from a Durbin regression, with its order chosen by BIC. This is
+  consistent when the regressors are only *pre-determined* (they react to past
+  shocks), where OLS and Cochrane-Orcutt are not. A variance estimator accounts
+  for the estimated filter.
+* **Heteroskedasticity of unknown form** (González-Coya and Perron, 2024). An
+  adaptive Lasso of the log squared residuals on candidate covariates gives the
+  weights, and a bias-corrected sandwich variance keeps inference valid when the
+  variance model is wrong. If nothing is selected, FGLS equals OLS.
+* **Both together** (Supplement S-4 of the 2026 paper).
+
+It is the R counterpart of the Python package
+[pyfgls](https://pypi.org/project/pyfgls/), and agrees with it to machine
+precision on deterministic quantities. More code by the author:
+<https://emiliogcs.com/code/>.
+
+## Installation
+
+```r
+# development version
+# install.packages("pak")
+pak::pak("emiliogcs/fgls")
+# from CRAN, once released
+install.packages("fgls")
+```
+
+## Serial correlation with a non-exogenous regressor
+
+```{r serial}
+library(fgls)
+sim <- simulate_serial(500, seed = 1) # design of Table 1 of the 2026 paper; true slope 1
+fit <- serial_fgls(y ~ x, data = sim)
+summary(fit)
+compare_fgls(OLS = lm(y ~ x, data = sim), FGLS = fit)
+```
+
+## Heteroskedasticity of unknown form
+
+```{r hetero}
+het <- simulate_hetero(200, skedastic = "log2", seed = 2)
+fit_h <- lasso_fgls(y ~ x, data = het, seed = 1)
+fit_h$skedastic$selected
+compare_fgls(OLS = lm(y ~ x, data = het), FGLS = fit_h)
+```
+
+## Both
+
+```{r both}
+both <- simulate_combined(200, ar = 0.5, skedastic = "x2", seed = 3)
+fit_b <- fgls(y ~ x, data = both, seed = 1)
+fit_b
+```
+
+See `vignette("fgls-intro")` to get started, and the articles on
+[serial correlation](https://emiliogcs.github.io/fgls/articles/serial-correlation.html),
+[heteroskedasticity](https://emiliogcs.github.io/fgls/articles/heteroskedasticity.html),
+the [combined estimator](https://emiliogcs.github.io/fgls/articles/combined.html) and the
+[validation](https://emiliogcs.github.io/fgls/articles/validation.html) against the papers
+and pyfgls.
+
+## Citation
+
+```{r citation, results = "asis", echo = FALSE}
+print(citation("fgls"), style = "text")
+```

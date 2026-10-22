@@ -2,7 +2,7 @@
 # (port of pyfgls/hetero/svr.py; libsvm through 'e1071').
 #
 # epsilon-insensitive SVR with a Gaussian (RBF) kernel of
-# r_t = log(max(u_t^2, delta^2)) on the standardised candidate covariates, with
+# r_t = log(max(u_t^2, delta^2)) on the standardized candidate covariates, with
 # (epsilon, C) chosen by K-fold cross-validation. GP24 find it dominated by the
 # adaptive Lasso. Degrees of freedom for the bias correction: the number of
 # observations whose residual lies on or outside the epsilon-tube.
@@ -18,7 +18,10 @@ svr_skedastic <- function(r, Z, names = colnames(Z), cost_grid = c(0.1, 1, 10, 1
   if (n > 5000L) {
     fgls_warn(
       sprintf(
-        "SVR scales quadratically or worse in T (= %d); this may be slow. Consider hetero = \"lasso\".",
+        paste(
+          "SVR scales quadratically or worse in T (= %d); this may be slow.",
+          "Consider hetero = \"lasso\"."
+        ),
         n
       ),
       "sample_size"
@@ -30,7 +33,11 @@ svr_skedastic <- function(r, Z, names = colnames(Z), cost_grid = c(0.1, 1, 10, 1
   if (ncol(Zs) == 0L) {
     return(constant_skedastic(r, d, names, "svr", "no non-constant covariates"))
   }
-  folds <- if (is.null(foldid)) make_folds(n, min(cv_folds, n), fold_scheme, seed) else check_foldid(foldid, n)
+  folds <- if (is.null(foldid)) {
+    make_folds(n, min(cv_folds, n), fold_scheme, seed)
+  } else {
+    check_foldid(foldid, n)
+  }
   gamma <- 1 / (ncol(Zs) * mean((Zs - mean(Zs))^2)) # sklearn's gamma = "scale"
   fit_svm <- function(x, y, C, eps) {
     e1071::svm(x, y,

@@ -29,7 +29,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Emilio Gonz<c3><a1>lez-Coya \email{emiliogc@bu.edu} (\href{https://orcid.org/0009-0001-0362-8843}{ORCID}) [copyright holder]
+\strong{Maintainer}: Emilio González-Coya \email{emiliogc@bu.edu} (\href{https://orcid.org/0009-0001-0362-8843}{ORCID}) [copyright holder]
 
 }
 \keyword{internal}

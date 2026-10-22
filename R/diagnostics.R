@@ -83,7 +83,8 @@ test_predetermined <- function(formula, data, max_lag = 4L, ar_order = NULL, kma
     e <- ar_filter(uD, rho)
     base <- ar_filter(X, rho)
     if (k > 0L) {
-      base <- cbind(base, vapply(seq_len(k), function(j) uD[(k - j + 1L):(n_all - j)], numeric(n_all - k)))
+      ulags <- vapply(seq_len(k), function(j) uD[(k - j + 1L):(n_all - j)], numeric(n_all - k))
+      base <- cbind(base, ulags)
     }
     cands <- lapply(lagged, function(L) {
       L[is.na(L)] <- 0
@@ -215,7 +216,10 @@ adf_test <- function(x, max_lags = NULL) {
 #' @export
 print.fgls_adf <- function(x, ...) {
   cat(sprintf(
-    "ADF test (constant, %d lag(s), %d obs.): statistic %.3f; 5%% critical value %.2f; unit root %s\n",
+    paste(
+      "ADF test (constant, %d lag(s), %d obs.): statistic %.3f; 5%% critical value",
+      "%.2f; unit root %s\n"
+    ),
     x$lags, x$nobs, x$statistic, x$critical_values[["0.05"]],
     if (x$unit_root_rejected) "rejected" else "not rejected"
   ))

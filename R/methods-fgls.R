@@ -12,6 +12,15 @@
 #' \eqn{n_{eff} - q} otherwise. `nobs()` returns the number of observations in
 #' the final regression, \eqn{n_{eff} = T - k^*}.
 #'
+#' @section Variances and the sandwich package:
+#' The variance estimators of the papers are available through
+#' `vcov(fit, type = ...)` and can be passed to other tools (for example
+#' `lmtest::coeftest(fit, vcov. = vcov(fit, type = "naive"))`). The package
+#' provides no `sandwich::estfun()` or `sandwich::bread()` methods, because the
+#' robust variance of PG26 eq. (29) and the bias-corrected sandwich of GP24 eq. (8)
+#' are not of the generic form those functions assume: `sandwich::vcovHAC()` and
+#' related functions would *not* reproduce them.
+#'
 #' @param object,x,formula An `"fgls"` object.
 #' @param type For `vcov()` and `confint()`: `NULL` (the variance chosen when
 #'   fitting) or another variance type to compute from the stored estimates:

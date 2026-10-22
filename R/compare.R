@@ -42,7 +42,8 @@ compare_fgls <- function(..., level = 0.95, ols_vcov = NULL) {
   })
   auto <- vapply(fits, function(f) f$method, character(1))
   dup <- auto %in% auto[duplicated(auto)]
-  auto[dup] <- sprintf("%s [%s]", auto[dup], vapply(fits[dup], function(f) f$vcov_type, character(1)))
+  vtypes <- vapply(fits[dup], function(f) f$vcov_type, character(1))
+  auto[dup] <- sprintf("%s [%s]", auto[dup], vtypes)
   labels[labels == ""] <- auto[labels == ""]
   labels <- make.unique(labels, sep = " ")
   terms <- unique(unlist(lapply(fits, function(f) names(f$coefficients))))

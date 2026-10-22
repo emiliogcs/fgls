@@ -15,7 +15,7 @@ articles:
   - title: Getting started
     navbar: ~
     contents:
-      - fgls
+      - fgls-intro
   - title: Methods
     navbar: Methods
     contents:

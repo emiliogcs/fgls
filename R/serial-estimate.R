@@ -67,7 +67,7 @@ estimate_serial <- function(y, X, x_names = colnames(X), y_name = "y", has_const
     if (km > 0L && selection$selected_by_ic == km) {
       hint <- if (ic_penalty == "order" && q > 2L) {
         paste0(
-          " With many stochastic regressors the paper's criterion, which penalises ",
+          " With many stochastic regressors the paper's criterion, which penalizes ",
           "only the AR order, tends to over-select: consider ic_penalty = \"params\"."
         )
       } else {

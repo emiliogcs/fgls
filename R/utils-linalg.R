@@ -2,7 +2,7 @@
 #
 # Rules followed throughout the package:
 # * regressions are solved by QR, never through the normal equations;
-# * rank decisions use column-normalised matrices so that they do not depend on
+# * rank decisions use column-normalized matrices so that they do not depend on
 #   the units of the regressors;
 # * only small (q x q) symmetric positive definite systems are inverted, by
 #   Cholesky with a pseudo-inverse fallback.
@@ -43,14 +43,14 @@ column_norms <- function(X) {
 # Split the columns of A into linearly independent and dependent ones.
 #
 # Columns are processed in order by modified Gram-Schmidt with
-# re-orthogonalisation on unit-norm columns, so that when a column is a linear
+# re-orthogonalization on unit-norm columns, so that when a column is a linear
 # combination of `base` and of earlier columns of A it is the *later* column that
 # is reported as dependent ("the lag of the constant is dropped"). The selection
 # for the first j columns does not depend on later columns.
 #
 # With `block_size` the columns are processed in consecutive blocks: each block
 # is projected on the basis of the earlier kept columns with matrix-matrix
-# products (twice), then orthogonalised column by column within the block. The
+# products (twice), then orthogonalized column by column within the block. The
 # decisions are those of the column-by-column algorithm; only the arithmetic is
 # grouped (much faster for long designs).
 #
@@ -107,7 +107,7 @@ independent_columns <- function(A, base = NULL, tol = NULL, block_size = NULL) {
   list(keep = keep, drop = drop, Q = Q[, seq_len(r), drop = FALSE])
 }
 
-# Numerical rank from a pivoted QR of the column-normalised matrix.
+# Numerical rank from a pivoted QR of the column-normalized matrix.
 matrix_rank <- function(X, tol = NULL) {
   m <- ncol(X)
   if (m == 0L) {

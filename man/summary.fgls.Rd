@@ -3,7 +3,7 @@
 \name{summary.fgls}
 \alias{summary.fgls}
 \alias{print.summary.fgls}
-\title{Summarise an fgls fit}
+\title{Summarize an fgls fit}
 \usage{
 \method{summary}{fgls}(object, level = 0.95, ...)
 

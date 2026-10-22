@@ -1,0 +1,42 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "fgls",
+  "name": "fgls: Feasible GLS for Serial Correlation and Heteroskedasticity",
+  "description": "Feasible generalized least squares (FGLS) estimators for linear regressions whose errors are serially correlated, heteroskedastic of unknown form, or both (Perron and González-Coya, 2026; González-Coya and Perron, 2024).",
+  "version": "0.1.0",
+  "license": "https://spdx.org/licenses/MIT",
+  "codeRepository": "https://github.com/emiliogcs/fgls",
+  "issueTracker": "https://github.com/emiliogcs/fgls/issues",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "R",
+    "url": "https://r-project.org"
+  },
+  "runtimePlatform": "R version 4.1.0 or later",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Emilio",
+      "familyName": "González-Coya",
+      "email": "emiliogc@bu.edu",
+      "@id": "https://orcid.org/0009-0001-0362-8843"
+    }
+  ],
+  "maintainer": [
+    {
+      "@type": "Person",
+      "givenName": "Emilio",
+      "familyName": "González-Coya",
+      "email": "emiliogc@bu.edu",
+      "@id": "https://orcid.org/0009-0001-0362-8843"
+    }
+  ],
+  "softwareRequirements": ["glmnet", "graphics", "grDevices", "stats", "utils"],
+  "keywords": ["econometrics", "feasible generalized least squares", "serial correlation", "heteroskedasticity", "lasso", "time series"],
+  "referencePublication": [
+    "https://doi.org/10.1016/j.jeconom.2026.106346",
+    "https://doi.org/10.1515/jem-2023-0007"
+  ],
+  "relatedLink": ["https://pypi.org/project/pyfgls/", "https://emiliogcs.com/code/"]
+}

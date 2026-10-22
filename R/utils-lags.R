@@ -76,7 +76,11 @@ critical_value <- function(alpha, df = Inf) {
 # Two-sided p-values of t/z statistics.
 two_sided_pvalues <- function(stat, df = Inf) {
   a <- abs(stat)
-  if (is.finite(df)) 2 * stats::pt(a, df, lower.tail = FALSE) else 2 * stats::pnorm(a, lower.tail = FALSE)
+  if (is.finite(df)) {
+    2 * stats::pt(a, df, lower.tail = FALSE)
+  } else {
+    2 * stats::pnorm(a, lower.tail = FALSE)
+  }
 }
 
 # Evaluate `code` with the RNG seeded by `seed`, restoring the caller's RNG

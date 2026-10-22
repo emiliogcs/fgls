@@ -1,0 +1,80 @@
+---
+title: "Serial correlation and heteroskedasticity together"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Serial correlation and heteroskedasticity together}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(fgls)
+```
+
+Section S-4 of the Supplement to Perron and González-Coya (2026) combines the
+two corrections:
+
+* **F-C** corrects for serial correlation: Durbin regression, BIC lag selection,
+  quasi-differencing;
+* **F-CH** then models the variance of the filtered residuals with the adaptive
+  Lasso of González-Coya and Perron (2024). The candidate covariates are built
+  from the *unfiltered* regressors (or supplied in `z`), and the
+  quasi-differenced regression is re-estimated by weighted least squares.
+
+The variance of F-CH is the bias-corrected sandwich of the 2024 paper applied to
+the filtered regressors (Supplement eqs. A.4--A.5). F-C intervals are built the
+same way with unit weights.
+
+```{r example}
+sim <- simulate_combined(200, ar = c(1.34, -0.42), skedastic = "exp", seed = 5)
+fit <- fgls(y ~ x, data = sim, seed = 1)
+summary(fit)
+compare_fgls(OLS = lm(y ~ x, data = sim), `F-C` = fit$stages$serial, `F-CH` = fit)
+```
+
+`fgls()` is the general function; this combined estimator is its default.
+
+## The first-stage correction
+
+The Supplement does not write out the correction for the estimated AR filter
+that eq. (29) of the paper provides in the serial-only case. `fgls` adds the
+heteroskedasticity-robust analogue of that term by default when the regressors
+are declared pre-determined (`first_stage_correction = TRUE`, the default for
+`exog = "predetermined"`). With exogenous regressors it is negligible. With
+non-exogenous ones, simulations show that it is needed for correct coverage
+(`vignette("validation")`).
+
+```{r first-stage}
+sim_ne <- simulate_combined(300, ar = 0.8, skedastic = "x2", gamma = 1, seed = 6)
+with_fs <- fgls(y ~ x, data = sim_ne, seed = 1)
+without_fs <- fgls(y ~ x, data = sim_ne, seed = 1, first_stage_correction = FALSE)
+c(with = sqrt(vcov(with_fs)[2, 2]), without = sqrt(vcov(without_fs)[2, 2]))
+```
+
+## No loss under homoskedasticity
+
+When the innovations are homoskedastic the Lasso typically selects nothing and
+F-CH equals F-C:
+
+```{r homo}
+hom <- simulate_combined(200, ar = 0.5, skedastic = "homoskedastic", seed = 7)
+fit_h <- fgls(y ~ x, data = hom, seed = 1)
+fit_h$skedastic$selected
+all.equal(coef(fit_h), coef(fit_h$stages$serial))
+```
+
+## Bootstrap cross-check
+
+`vcov = "bootstrap"` re-runs the whole estimator on residual-based sieve
+bootstrap samples, using the estimated AR filter with wild innovations. It is
+an independent check of the analytic variance. The regressors are held fixed,
+so with non-exogenous regressors it does not reproduce their feedback.
+
+```{r bootstrap}
+fb <- fgls(y ~ x, data = sim, seed = 1, vcov = "bootstrap", control = fgls_control(n_boot = 19))
+cbind(analytic = sqrt(diag(vcov(fit))), bootstrap = sqrt(diag(vcov(fb))))
+```

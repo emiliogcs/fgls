@@ -4,7 +4,7 @@
 #' follow the papers and the Python package 'pyfgls'.
 #'
 #' @param ic_penalty Penalty of the lag-order criterion: `"order"` (default,
-#'   PG26 eq. 14) penalises the AR order; `"params"` penalises every
+#'   PG26 eq. 14) penalizes the AR order; `"params"` penalizes every
 #'   coefficient a lag adds to the Durbin regression, which avoids
 #'   over-selection with many stochastic regressors.
 #' @param min_lags Lower bound on the selected AR order: `NULL` (default), a

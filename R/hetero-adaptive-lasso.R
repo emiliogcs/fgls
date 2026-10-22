@@ -7,9 +7,9 @@
 #   min_{g0, g}  1/2 sum_t (r_t - g0 - z_t' g)^2 + lambda sum_j w_j |g_j|,
 #   w_j = |g_j^ridge|^(-psi),
 #
-# with an unpenalised intercept (Zou, 2006):
+# with an unpenalized intercept (Zou, 2006):
 #
-# 1. standardise the columns of z (mean 0, variance 1, as glmnet does);
+# 1. standardize the columns of z (mean 0, variance 1, as glmnet does);
 # 2. ridge first step, its penalty chosen by K-fold cross-validation (exact
 #    closed form through the SVD, so d > T is fine);
 # 3. for each psi, rescale column j by 1/w_j = |g_j^ridge|^psi so that an
@@ -25,7 +25,7 @@
 #    default (cv_weights = "fold") the ridge step, and hence the weights, are
 #    re-estimated on each training fold.
 #
-# glmnet minimises (2n)^{-1} RSS + lambda_glmnet * penalty, i.e. the objective
+# glmnet minimizes (2n)^{-1} RSS + lambda_glmnet * penalty, i.e. the objective
 # above divided by n: lambda_paper = n * lambda_glmnet (both reported).
 #
 # If every slope is zero at the chosen penalty the fitted variance is constant
@@ -55,7 +55,7 @@ check_foldid <- function(foldid, n) {
   f
 }
 
-# Standardise columns (population sd, as glmnet); constant columns dropped.
+# Standardize columns (population sd, as glmnet); constant columns dropped.
 standardize_cols <- function(Z) {
   mu <- colMeans(Z)
   Zc <- sweep(Z, 2L, mu, "-")
@@ -65,7 +65,7 @@ standardize_cols <- function(Z) {
   list(Zs = Zs, mu = mu, sd = sdv, keep = keep)
 }
 
-# Spectral decomposition of a centred design: eigen-decomposition of the
+# Spectral decomposition of a centered design: eigen-decomposition of the
 # d x d Gram matrix when n > d (s^2 = eigenvalues), otherwise the SVD. Both give
 # ridge solutions V diag(1 / (s^2 + lam)) V' Z'r; the penalties used here are at
 # least n * 1e-4, so the Gram route loses no accuracy.
@@ -79,7 +79,7 @@ centred_spectrum <- function(Zc) {
   }
 }
 
-# Ridge slopes argmin ||r - g0 - Zs g||^2 + lam ||g||^2 (intercept unpenalised).
+# Ridge slopes argmin ||r - g0 - Zs g||^2 + lam ||g||^2 (intercept unpenalized).
 ridge_fit <- function(Zs, r, lam) {
   Zc <- sweep(Zs, 2L, colMeans(Zs), "-")
   sp <- centred_spectrum(Zc)
@@ -183,15 +183,15 @@ feature_sign <- function(G, cvec, n, lambda, b, tol = 1e-10, max_iter = NULL) {
       A <- sort(c(A, i))
     }
     # feature-sign step: unconstrained minimiser on A with signs theta
-    bA_new <- tryCatch(
+    b_active_new <- tryCatch(
       solve(G[A, A, drop = FALSE], cvec[A] - n * lambda * theta[A]),
       error = function(e) NULL
     )
-    if (is.null(bA_new)) {
+    if (is.null(b_active_new)) {
       return(NULL)
     }
     b_new <- numeric(d)
-    b_new[A] <- bA_new
+    b_new[A] <- b_active_new
     # line search over the segment, at its end and at sign changes
     cand <- list(b_new)
     dlt <- b_new - b
@@ -303,7 +303,7 @@ polish_lasso <- function(G, cvec, n, lambdas, B, rss0 = NULL) {
 }
 
 # Lasso coefficients (d x L) of r on Ztil at the penalties `lambdas`
-# (decreasing), objective (2n)^{-1} RSS + lambda ||g||_1 with an unpenalised
+# (decreasing), objective (2n)^{-1} RSS + lambda ||g||_1 with an unpenalized
 # intercept, solved by glmnet and refined on the active set. Returns the
 # column means and the response mean, so that predictions are
 # (Z - zm) %*% coef + rm.
@@ -331,7 +331,7 @@ lasso_path <- function(Ztil, r, lambdas, thresh = 1e-10, polish = TRUE) {
 
 # Fold-by-fold mean squared prediction errors: one (K x L) matrix per psi.
 # With the exact LARS engine the Gram matrix of each training fold is computed
-# once and rescaled for every psi (column rescaling commutes with centring).
+# once and rescaled for every psi (column rescaling commutes with centering).
 cv_errors <- function(Zs, r, folds, psis, grids, g_full, lam_ridge, fold_weights,
                       units = NULL, engine = "lars", thresh = 1e-10) {
   labels <- sort(unique(folds))
@@ -408,7 +408,10 @@ adaptive_lasso <- function(r, Z, names = colnames(Z), psi_grid = .psi_grid, cv_f
   }
   if (n < 2L * K) {
     fgls_warn(
-      sprintf("Only %d observations for %d-fold cross-validation; the skedastic fit is noisy.", n, K),
+      sprintf(
+        "Only %d observations for %d-fold cross-validation; the skedastic fit is noisy.",
+        n, K
+      ),
       "sample_size"
     )
   }
@@ -457,7 +460,7 @@ adaptive_lasso <- function(r, Z, names = colnames(Z), psi_grid = .psi_grid, cv_f
   scale <- adaptive_scale(g_w, psi_star)
   p <- lasso_fit(sweep(Zs, 2L, scale, "*"), r, alphas[seq_len(i_lam)], engine, thresh)
   gtil <- p$coef[, i_lam]
-  g_std <- gtil * scale # coefficients on standardised z
+  g_std <- gtil * scale # coefficients on standardized z
   coef <- numeric(d)
   coef[keep] <- g_std / st$sd[keep]
   names(coef) <- names

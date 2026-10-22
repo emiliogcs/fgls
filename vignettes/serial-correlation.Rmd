@@ -1,0 +1,146 @@
+---
+title: "Serial correlation (Perron and González-Coya, 2026)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Serial correlation (Perron and González-Coya, 2026)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(fgls)
+```
+
+## The problem
+
+In \(y_t = x_t'\beta + u_t\) with autocorrelated errors, GLS (or its
+feasible version) is more efficient than OLS. The classic feasible version,
+Cochrane-Orcutt, estimates the error autocorrelation from OLS residuals. That
+is fine when the regressors are *exogenous*, uncorrelated with the errors at all
+leads and lags. Many time-series regressors are only *pre-determined*: they are
+uncorrelated with current and future innovations, but respond to past ones, as
+with policy variables, expectations and lagged prices. OLS is then inconsistent,
+and so is Cochrane-Orcutt, which inherits its residuals.
+
+## The estimator
+
+The errors are approximated by an AR(k) process,
+\(u_t = \rho_1 u_{t-1} + \dots + \rho_k u_{t-k} + e_t\).
+Substituting \(u_t = y_t - x_t'\beta\) gives the **Durbin regression**
+
+$$y_t = \sum_{j=1}^k \rho_j y_{t-j} + x_t'\beta - \sum_{j=1}^k x_{t-j}'\delta_j + e_t ,$$
+
+estimated by OLS. Every regressor of this equation is uncorrelated with the
+innovation \(e_t\) when \(x_t\) is pre-determined, so the coefficients on the
+lagged \(y\) estimate the \(\rho_j\) consistently. In `fgls`:
+
+1. the order \(k\) minimizes BIC over \(0, \dots, k_{max}\), all orders being
+   fitted on the same sample (eq. 14);
+2. the data are quasi-differenced with the estimated filter, every column
+   including the constant, and the first \(k\) observations are dropped; OLS on
+   the filtered data gives \(\hat\beta\) (eq. 15).
+
+Lagged columns that duplicate other regressors (lags of the constant, of a
+linear trend, of periodic dummies) are dropped automatically from the Durbin
+regression.
+
+## Table 1 of the paper
+
+```{r table1}
+sim <- simulate_serial(500, seed = 7) # AR(1) 0.8, x_t = v_t + e_{t-1}
+fits <- list(
+  OLS = ols_robust(y ~ x, data = sim),
+  `Cochrane-Orcutt` = cochrane_orcutt(y ~ x, data = sim),
+  Durbin = durbin_estimator(y ~ x, data = sim),
+  FGLS = serial_fgls(y ~ x, data = sim),
+  `GLS (known rho)` = infeasible_gls(y ~ x, data = sim, rho = 0.8)
+)
+sapply(fits, function(f) coef(f)[["x"]])
+```
+
+The true slope is 1. In the paper's Monte Carlo (10,000 replications) OLS has a
+bias of about 0.40, Cochrane-Orcutt about 0.03, and FGLS is as precise as the
+infeasible GLS; `vignette("validation")` reproduces these numbers with this
+package.
+
+## Variance and inference
+
+Because \(\hat\rho\) is estimated, and the regressors may react to past
+innovations, the usual GLS variance (`vcov = "naive"`, eq. 27) understates the
+uncertainty of \(\hat\beta\). The default `vcov = "robust"` (eqs. 28--29) adds a
+correction built from the covariance between the filtered regressors and past
+residuals. It is valid whether the regressors are exogenous or merely
+pre-determined, and it is positive semidefinite by construction.
+
+```{r variance}
+fit <- fits$FGLS
+cbind(robust = sqrt(diag(vcov(fit))), naive = sqrt(diag(vcov(fit, type = "naive"))))
+fit$nonexogeneity_share
+```
+
+`nonexogeneity_share` averages the relative increase of the robust over the
+naive variance across coefficients. Values near zero mean the regressors
+behave as exogenous.
+
+## Lag selection
+
+```{r ic}
+plot(fit, which = 3)
+fit$bic_path
+```
+
+`kmax` defaults to \(\lfloor 12 (T/200)^{1/4} \rfloor\) (12 at \(T = 200\), as in
+the paper's simulations) and is capped so that the Durbin regression uses at
+most half of the sample. `ar_order` fixes the order; `ic = "aic"` and
+`fgls_control(min_lags = "adjusted")` are alternatives. With several stochastic
+regressors, `fgls_control(ic_penalty = "params")` penalizes every coefficient a
+lag adds.
+
+## Lagged dependent variables
+
+When lags of \(y\) are regressors, the Durbin coefficients on lagged \(y\) mix
+the dynamics of the model with those of the errors. Under the common-factor
+structure the AR coefficients can be recovered from the ratio of a lagged
+regressor's coefficient to its contemporaneous one (Wallis, 1967; Section 4.2 of
+the paper). Declare the lagged dependent variables:
+
+```{r wallis}
+set.seed(3)
+n <- 400
+w <- rnorm(n + 1)
+u <- as.numeric(stats::filter(rnorm(n + 1), 0.5, method = "recursive"))
+yy <- numeric(n + 1)
+for (t in 2:(n + 1)) yy[t] <- 0.4 * yy[t - 1] + 1 + w[t] + u[t]
+dyn <- data.frame(y = yy[-1], ylag = yy[-(n + 1)], w = w[-1])
+fit_dyn <- serial_fgls(y ~ ylag + w, data = dyn, lagged_dep_vars = "ylag")
+coef(fit_dyn)
+fit_dyn$rho
+```
+
+Without the declaration, `fgls()` warns that a regressor looks like a lagged
+dependent variable.
+
+## MA(1) errors
+
+For errors known to be MA(1), such as two-step-ahead forecast errors, the GMA
+estimator (Section 5) inverts the MA filter with the maximum-likelihood
+estimate of \(\theta\):
+
+```{r gma}
+pred <- simulate_predictive(300, theta = -0.4, seed = 4)
+serial_fgls(y ~ x, data = pred, serial = "ma1")
+```
+
+## Checking pre-determinedness
+
+`test_predetermined()` (experimental) is a variable-addition LM test for missing
+lags of the regressors (Remark 9 of the paper). A rejection suggests adding lags
+of the regressors to the model:
+
+```{r predetermined}
+suppressWarnings(test_predetermined(y ~ x, data = sim))
+```

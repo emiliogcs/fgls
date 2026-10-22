@@ -52,7 +52,7 @@
 #'   ratio (PG26 Section 4.2).
 #' * Errors known to be MA(1), e.g. multi-step forecast errors: `serial =
 #'   "ma1"` (GMA estimator, PG26 Section 5).
-#' * With several stochastic regressors the BIC that penalises only the AR
+#' * With several stochastic regressors the BIC that penalizes only the AR
 #'   order can select `kmax`; use `control = fgls_control(ic_penalty =
 #'   "params")`.
 #' * Results involving cross-validation depend on the random folds: set `seed`
@@ -113,7 +113,7 @@
 #'   (`"min"`, default) or the largest penalty within one standard error of it
 #'   (`"1se"`).
 #' @param weight_clip Optional quantiles `c(lo, hi)` at which the fitted
-#'   log-variance is winsorised, e.g. `c(0.01, 0.99)`.
+#'   log-variance is winsorized, e.g. `c(0.01, 0.99)`.
 #' @param seed Optional seed for the cross-validation folds and the bootstrap.
 #'   The session's random number generator state is restored afterwards.
 #' @param use_t Use Student-t (`n_eff - q` degrees of freedom) instead of
@@ -444,7 +444,9 @@ fgls_frame <- function(formula, data, subset_expr, env, time, policy, time_serie
     index <- index_from_env(formula)
   }
   if (!is.null(index) && length(index) != n0) {
-    fgls_abort(sprintf("The time index has %d values but the data have %d rows.", length(index), n0))
+    fgls_abort(sprintf(
+      "The time index has %d values but the data have %d rows.", length(index), n0
+    ))
   }
   # candidate covariates given as a formula or a matrix share the row handling
   zmat <- NULL

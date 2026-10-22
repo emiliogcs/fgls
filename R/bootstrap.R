@@ -48,7 +48,8 @@ sieve_sample <- function(fitted, uhat, innovations, rho, scheme, dist) {
 bootstrap_covariance <- function(refit, draw, n_boot, seed = NULL, cores = 1L) {
   seeds <- with_seed(seed, sample.int(.Machine$integer.max, n_boot))
   one <- function(s) with_seed(s, refit(draw()))
-  if (cores > 1L && .Platform$OS.type != "windows" && requireNamespace("parallel", quietly = TRUE)) {
+  forked <- cores > 1L && .Platform$OS.type != "windows"
+  if (forked && requireNamespace("parallel", quietly = TRUE)) {
     draws <- parallel::mclapply(seeds, one, mc.cores = cores)
   } else {
     draws <- lapply(seeds, one)

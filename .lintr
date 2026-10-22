@@ -1,8 +1,10 @@
 linters: linters_with_defaults(
     line_length_linter(100),
-    object_name_linter(styles = c("snake_case", "symbols", "CamelCase")),
+    object_name_linter(styles = c("snake_case", "symbols", "CamelCase", "camelCase", "dotted.case", "UPPERCASE")),
     cyclocomp_linter = NULL,
+    commented_code_linter = NULL,
+    indentation_linter = NULL,
     object_length_linter(40)
   )
-exclusions: list("tools", "data-raw", "tests/testthat/fixtures")
+exclusions: list("tools", "data-raw", "tests/testthat/fixtures", "validation", "tests/testthat" = list(object_usage_linter = Inf))
 encoding: "UTF-8"

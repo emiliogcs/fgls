@@ -3,7 +3,7 @@
 # differ from the Python package while the designs are the same).
 
 # u_t = sum_i ar_i u_{t-i} + e_t + sum_i ma_i e_{t-i}, pre-sample values zero
-# (the u_0 = 0 initialisation of PG26 Table 1).
+# (the u_0 = 0 initialization of PG26 Table 1).
 arma_errors <- function(e, ar = numeric(0), ma = numeric(0)) {
   n <- length(e)
   v <- as.numeric(e)

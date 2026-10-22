@@ -1,7 +1,7 @@
 # Exact Lasso path by the LARS homotopy with the Lasso modification (Efron,
 # Hastie, Johnstone and Tibshirani, 2004), on a Gram matrix.
 #
-# For centred data the Lasso minimises (2n)^{-1} ||rc - Zc b||^2 + a ||b||_1.
+# For centered data the Lasso minimizes (2n)^{-1} ||rc - Zc b||^2 + a ||b||_1.
 # With G = Zc'Zc, c = Zc'rc and correlations C(b) = c - G b, the solution
 # satisfies C_j = n a sign(b_j) on the active set and |C_j| <= n a elsewhere,
 # and is piecewise linear in a. Starting from b = 0 at a_max = max|c|/n, the

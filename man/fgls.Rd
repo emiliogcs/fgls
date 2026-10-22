@@ -113,7 +113,7 @@ plain Lasso.}
 (\code{"1se"}).}
 
 \item{weight_clip}{Optional quantiles \code{c(lo, hi)} at which the fitted
-log-variance is winsorised, e.g. \code{c(0.01, 0.99)}.}
+log-variance is winsorized, e.g. \code{c(0.01, 0.99)}.}
 
 \item{seed}{Optional seed for the cross-validation folds and the bootstrap.
 The session's random number generator state is restored afterwards.}
@@ -221,7 +221,7 @@ in any order.
 \code{lagged_dep_vars}; the AR coefficients are then recovered by the Wallis
 ratio (PG26 Section 4.2).
 \item Errors known to be MA(1), e.g. multi-step forecast errors: \code{serial = "ma1"} (GMA estimator, PG26 Section 5).
-\item With several stochastic regressors the BIC that penalises only the AR
+\item With several stochastic regressors the BIC that penalizes only the AR
 order can select \code{kmax}; use \code{control = fgls_control(ic_penalty = "params")}.
 \item Results involving cross-validation depend on the random folds: set \code{seed}
 for reproducibility.

@@ -4,7 +4,7 @@
 # with w = x (case a) or a Bernoulli(0.75) mixture (case b); T = 200, kmax = 12.
 
 s4_cell <- function(ar = 0.5, ma = numeric(0), skedastic = "x2", driver = "x", gamma = 0,
-                    R = 600, seed = 31) {
+                    R = 1000, seed = 31) {
   run_mc(R, seed, function() {
     s <- simulate_combined(200, ar = ar, ma = ma, skedastic = skedastic, driver = driver, gamma = gamma)
     w <- s$w

@@ -278,6 +278,8 @@ hybrid_gls <- function(formula, data, subset, na.action = stats::na.fail, alpha 
   bench_result(bd, bh, h$cov, "Hybrid (GLS)", "HAC", use_t, cl, model,
     n_eff = n - 1L, innovations = eh, start = 1L,
     serial = simple_serial_info(rho, "hybrid", d$x_names, lm_pvalue = pval),
-    notes = sprintf("Breusch-Godfrey LM p-value %.3g; quasi-differenced with rho = %.3f.", pval, rho)
+    notes = sprintf(
+      "Breusch-Godfrey LM p-value %.3g; quasi-differenced with rho = %.3f.", pval, rho
+    )
   )
 }

@@ -1,4 +1,4 @@
-#' Summarise an fgls fit
+#' Summarize an fgls fit
 #'
 #' The summary contains the coefficient table (estimates, standard errors,
 #' z or t statistics, p-values and confidence intervals) and the main
@@ -81,7 +81,11 @@ summary_info <- function(x) {
   if (!is.null(h)) {
     info[["Skedastic fit"]] <- h$method
     if (h$method %in% c("lasso", "wls_s1", "wls_s2", "svr")) {
-      info[["Selected z"]] <- if (length(h$selected)) paste(h$selected, collapse = ", ") else "(none)"
+      info[["Selected z"]] <- if (length(h$selected)) {
+        paste(h$selected, collapse = ", ")
+      } else {
+        "(none)"
+      }
     }
     if (identical(h$method, "lasso") && !is.null(h$psi)) {
       info[["Lasso psi, lambda"]] <- sprintf("%g, %.4g", h$psi, h$lambda)

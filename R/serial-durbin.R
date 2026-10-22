@@ -17,7 +17,7 @@
 # or of earlier columns (lagged constants, lagged trends, periodic dummies, a lag
 # of y that is already a regressor) are dropped *in order*. Hence the design of
 # any order k' < k is a prefix of the design of order k on the same sample, which
-# lets the lag selection reuse one QR factorisation.
+# lets the lag selection reuse one QR factorization.
 
 # Relative residual-norm threshold for dropping lagged columns: lagged
 # deterministic terms are collinear up to rounding (~1e-15).
@@ -102,7 +102,7 @@ design_ylag_columns <- function(design, k = design$order) {
   pos[!is.na(pos)]
 }
 
-# Diagonal of (Z'Z)^{-1} from a QR factorisation (column pivoting undone).
+# Diagonal of (Z'Z)^{-1} from a QR factorization (column pivoting undone).
 xtx_inv_diag <- function(Z) {
   p <- ncol(Z)
   if (p == 0L) {

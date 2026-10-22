@@ -37,7 +37,8 @@ ma1_negloglik <- function(theta, u) {
 # [-0.995, 0.995], as scipy's bounded scalar minimiser).
 ma1_mle <- function(u) {
   uc <- u - mean(u)
-  theta <- stats::optimize(ma1_negloglik, c(-.theta_bound, .theta_bound), u = uc, tol = 1e-8)$minimum
+  opt <- stats::optimize(ma1_negloglik, c(-.theta_bound, .theta_bound), u = uc, tol = 1e-8)
+  theta <- opt$minimum
   if (abs(theta) > 0.98) {
     fgls_warn(
       sprintf(

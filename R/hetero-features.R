@@ -86,7 +86,7 @@ dictionary_impl <- function(X, names, transforms = .transforms, skip = integer(0
 #' \eqn{x > 0}), \eqn{\cos x} and \eqn{\cos 2x}. This contains the specification
 #' \eqn{z = (1, x, [\log x]^2, x^2, \cos x, \cos 2x)} of the simulations of
 #' González-Coya and Perron (2024); the intercept of the skedastic regression is
-#' always included and never penalised. Binary (dummy) columns are passed through
+#' always included and never penalized. Binary (dummy) columns are passed through
 #' untransformed, undefined or constant transforms are skipped and duplicated
 #' columns are removed.
 #'

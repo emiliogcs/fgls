@@ -35,8 +35,8 @@ log_squared_residuals <- function(u, delta) {
   log(pmax(u^2, delta^2))
 }
 
-# Fitted log-variances to variances normalised to mean one (optional quantile
-# winsorisation). Normalising by a constant changes neither the estimates nor
+# Fitted log-variances to variances normalized to mean one (optional quantile
+# winsorization). Normalising by a constant changes neither the estimates nor
 # the sandwich variance.
 variances_from_log <- function(h, clip = NULL) {
   if (!is.null(clip)) {

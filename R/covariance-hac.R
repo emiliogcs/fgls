@@ -59,7 +59,11 @@ long_run_covariance <- function(scores, kernel = "qs", bandwidth = "andrews", sk
   if (identical(bandwidth, "andrews")) {
     bw <- andrews_bandwidth(scores, kernel, skip = skip)
   } else if (identical(bandwidth, "nw")) {
-    bw <- if (kernel == "bartlett") newey_west_lags(n) + 1 else andrews_bandwidth(scores, kernel, skip = skip)
+    bw <- if (kernel == "bartlett") {
+      newey_west_lags(n) + 1
+    } else {
+      andrews_bandwidth(scores, kernel, skip = skip)
+    }
   } else {
     bw <- as.numeric(bandwidth)
     if (!(bw > 0)) fgls_abort("`bandwidth` must be positive.")

@@ -53,7 +53,9 @@ estimate_hetero <- function(y, X, Z, z_names = colnames(Z), method = "lasso", de
     v <- rep(1, n)
   } else if (method == "known") {
     v <- known_variances(known)
-    if (length(v) != n) fgls_abort(sprintf("Known variances have length %d; expected %d.", length(v), n))
+    if (length(v) != n) {
+      fgls_abort(sprintf("Known variances have length %d; expected %d.", length(v), n))
+    }
   } else {
     r <- log_squared_residuals(u0, floor_)
     fit <- fit_skedastic(r, Z, z_names, method,

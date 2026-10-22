@@ -28,7 +28,7 @@ fgls_control(
 }
 \arguments{
 \item{ic_penalty}{Penalty of the lag-order criterion: \code{"order"} (default,
-PG26 eq. 14) penalises the AR order; \code{"params"} penalises every
+PG26 eq. 14) penalizes the AR order; \code{"params"} penalizes every
 coefficient a lag adds to the Durbin regression, which avoids
 over-selection with many stochastic regressors.}
 

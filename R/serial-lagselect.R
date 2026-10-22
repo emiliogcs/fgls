@@ -9,10 +9,10 @@
 #
 # with sigma2_k the mean squared residual of the order-k Durbin regression. The
 # penalty counts the AR order k, as in the paper (ic_penalty = "order");
-# ic_penalty = "params" penalises every coefficient a lag adds instead.
+# ic_penalty = "params" penalizes every coefficient a lag adds instead.
 #
 # The order-k design is a prefix of the order-kmax design, so one QR
-# factorisation Z = QR gives every residual sum of squares: with r = Q'y,
+# factorization Z = QR gives every residual sum of squares: with r = Q'y,
 # RSS_k = RSS_kmax + sum_{i > p_k} r_i^2.
 
 # Upper bound on the number of Durbin regressors relative to the sample.
@@ -124,7 +124,7 @@ nested_rss <- function(design, kmax) {
   }
 }
 
-# Choose the AR order minimising BIC/AIC over k = 0..kmax on the common sample.
+# Choose the AR order minimizing BIC/AIC over k = 0..kmax on the common sample.
 select_ar_order <- function(y, X, x_names, kmax, ic = "bic", min_lags = NULL,
                             y_name = "y", ic_penalty = "order") {
   arg_choice(ic, c("bic", "aic"), "ic")

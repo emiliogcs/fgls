@@ -115,7 +115,10 @@ build_combined <- function(spec, est, y, cov_type, rn) {
   fr <- ser$filtered
   corr <- if (est$first_stage_correction) "with" else "without"
   note1 <- sprintf(
-    "Covariance: PG26 Supplement (A.4)-(A.5) sandwich (%s), %s the first-stage (Durbin) correction.",
+    paste(
+      "Covariance: PG26 Supplement (A.4)-(A.5) sandwich (%s), %s the first-stage",
+      "(Durbin) correction."
+    ),
     cov_type, corr
   )
   notes <- note1

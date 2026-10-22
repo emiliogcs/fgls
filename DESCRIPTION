@@ -1,7 +1,7 @@
 Package: fgls
 Type: Package
 Title: Feasible GLS for Serial Correlation and Heteroskedasticity
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person("Emilio", "González-Coya", , "emiliogc@bu.edu", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0009-0001-0362-8843"))
