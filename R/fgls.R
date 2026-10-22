@@ -261,7 +261,7 @@ fgls <- function(formula, data, subset, na.action = stats::na.fail,
   )
   d <- prepare_data(frame$y, frame$X,
     y_name = frame$y_name, index = frame$index,
-    time_series = time_series, allow_gaps = allow_gaps
+    time_series = time_series, allow_gaps = allow_gaps, rows = frame$rows
   )
   lagged_dep_idx <- resolve_columns(lagged_dep_vars, d$x_names, "lagged_dep_vars")
   if (use_z) {
@@ -273,7 +273,7 @@ fgls <- function(formula, data, subset, na.action = stats::na.fail,
     warn_lagged_dependent(detect_lagged_dependent(d$y, d$X, d$x_names))
   }
   if (isTRUE(check_stationarity) && time_series) screen_stationarity(d)
-  if (hetero == "known") variance <- resolve_known_variance(variance, d)
+  if (hetero == "known") variance <- resolve_known_variance(variance, d, frame)
 
   spec <- list(
     mode = mode, serial = serial, hetero = hetero, X = d$X, x_names = d$x_names,
@@ -478,20 +478,23 @@ fgls_frame <- function(formula, data, subset_expr, env, time, policy, time_serie
       fgls_abort("`subset` must be a logical or numeric vector.")
     }
   }
-  rn <- rownames(mf)
   mf <- mf[rows, , drop = FALSE]
   if (!is.null(index)) index <- index[rows]
   if (!is.null(zmat)) zmat <- zmat[rows, , drop = FALSE]
 
   na_rows <- !stats::complete.cases(mf)
   if (!is.null(zmat)) na_rows <- na_rows | !stats::complete.cases(zmat)
-  keep <- missing_rows_keep(na_rows, policy, time_series, index)
+  # messages name rows of the data, not positions within the subset
+  keep <- missing_rows_keep(na_rows, policy, time_series, index, rows = rows)
   na_act <- NULL
   if (!all(keep)) {
-    omitted <- rows[!keep]
-    names(omitted) <- rn[omitted]
+    # as in stats::model.frame(), na.action holds positions in the subset frame
+    # (named by row name), which is what naresid() / napredict() pad against
+    omitted <- which(!keep)
+    names(omitted) <- rownames(mf)[omitted]
     na_act <- structure(omitted, class = if (policy == "exclude") "exclude" else "omit")
     mf <- mf[keep, , drop = FALSE]
+    rows <- rows[keep]
     if (!is.null(index)) index <- index[keep]
     if (!is.null(zmat)) zmat <- zmat[keep, , drop = FALSE]
   }
@@ -508,19 +511,48 @@ fgls_frame <- function(formula, data, subset_expr, env, time, policy, time_serie
   y <- as.numeric(yraw)
   X <- stats::model.matrix(mt, mf, contrasts.arg = contrasts)
   if (nrow(X) != length(y)) fgls_abort("The model matrix and the response do not match.")
+  # rows: the rows of the data (positions in 1..n_data) that form the sample
   list(
     y = y, X = X, index = index, mf = mf, terms = mt,
     xlevels = stats::.getXlevels(mt, mf), contrasts = attr(X, "contrasts"),
-    zmat = zmat, na.action = na_act, rownames = rownames(mf),
+    zmat = zmat, na.action = na_act, rownames = rownames(mf), rows = rows, n_data = n0,
     y_name = paste(deparse(formula[[2L]], width.cutoff = 500L), collapse = " ")
   )
 }
 
-resolve_known_variance <- function(variance, d) {
-  vals <- if (is.function(variance)) variance(d$X) else variance
-  vals <- as.numeric(vals)
-  if (length(vals) != d$nobs) {
-    fgls_abort(sprintf("Known variances have length %d; expected %d.", length(vals), d$nobs))
+# Known error variances for hetero = "known". A function is applied to the model
+# matrix of the sample. A vector normally has one value per row of the data and
+# goes through the same `subset` / `na.action` row selection as the data (like
+# a matrix `z`, or the weights of lm()); a vector with one value per observation
+# of the sample is accepted as well.
+resolve_known_variance <- function(variance, d, frame = NULL) {
+  if (is.function(variance)) {
+    vals <- as.numeric(variance(d$X))
+    if (length(vals) != d$nobs) {
+      fgls_abort(sprintf(
+        "`variance(X)` returned %d values; expected %d, one per observation.",
+        length(vals), d$nobs
+      ))
+    }
+  } else {
+    vals <- as.numeric(variance)
+    n_data <- if (is.null(frame)) d$nobs else frame$n_data
+    # one value per row of the data takes precedence (rows may also be reordered
+    # or repeated by `subset` in a cross-section)
+    if (!is.null(frame) && length(vals) == n_data) vals <- vals[frame$rows]
+    if (length(vals) != d$nobs) {
+      fgls_abort(sprintf(
+        "Known variances have length %d; expected %s.", length(vals),
+        if (n_data == d$nobs) {
+          sprintf("%d, one per row of the data", n_data)
+        } else {
+          sprintf(
+            "%d (one per row of the data) or %d (one per observation used)",
+            n_data, d$nobs
+          )
+        }
+      ))
+    }
   }
   if (any(!is.finite(vals)) || any(vals <= 0)) {
     fgls_abort("Known variances must be positive and finite.")

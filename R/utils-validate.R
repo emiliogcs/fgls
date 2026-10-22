@@ -26,9 +26,19 @@ arg_default <- function(value, choices, name) {
   arg_choice(value, choices, name)
 }
 
-format_locations <- function(index, positions) {
+# Describe where problems are: time-index labels when there is an index,
+# otherwise row numbers. `rows` maps positions in the estimation sample to rows
+# of the user's data (after `subset` and dropped missing values); NULL when the
+# two coincide.
+format_locations <- function(index, positions, rows = NULL) {
   pos <- utils::head(positions, .max_locations)
-  labels <- if (!is.null(index)) format(index[pos]) else as.character(pos)
+  labels <- if (!is.null(index)) {
+    format(index[pos])
+  } else if (!is.null(rows)) {
+    as.character(rows[pos])
+  } else {
+    as.character(pos)
+  }
   more <- if (length(positions) > length(pos)) {
     sprintf(" (and %d more)", length(positions) - length(pos))
   } else {
@@ -84,10 +94,38 @@ time_index_gaps <- function(index) {
   which(d > 1.5 * modal)
 }
 
-# Check that a time index is sorted, unique and (by default) gap-free.
-check_time_index <- function(index, allow_gaps = FALSE) {
+# Check that a time index is sorted, unique and (by default) gap-free. `rows`
+# (see format_locations()) is used to name the rows of missing time stamps.
+check_time_index <- function(index, allow_gaps = FALSE, rows = NULL) {
   if (is.null(index)) {
     return(invisible(NULL))
+  }
+  if (is.character(index) || is.factor(index)) {
+    example <- utils::head(as.character(index[!is.na(index)]), 1L)
+    fgls_abort(
+      sprintf(
+        paste0(
+          "The time index is %s%s, so its order and gaps cannot be checked. ",
+          "Convert it first, e.g. with as.Date() for dates or zoo::as.yearmon() for ",
+          "\"YYYY-MM\" months, or give a numeric index."
+        ),
+        if (is.factor(index)) "a factor" else "a character vector",
+        if (length(example)) sprintf(" (e.g. \"%s\")", example) else ""
+      ),
+      "time_index"
+    )
+  }
+  if (anyNA(index)) {
+    fgls_abort(
+      sprintf(
+        paste0(
+          "The time index has missing values at %s. Every observation needs a time ",
+          "stamp: fill them in, or leave those rows out of the sample."
+        ),
+        format_locations(NULL, which(is.na(index)), rows)
+      ),
+      "time_index"
+    )
   }
   if (anyDuplicated(index)) {
     dup <- utils::head(unique(index[duplicated(index)]), .max_locations)
@@ -146,6 +184,68 @@ check_time_index <- function(index, allow_gaps = FALSE) {
   invisible(NULL)
 }
 
+# Without a time index consecutive rows are taken to be consecutive periods
+# (lags are positional), so the rows of the data in the sample (`rows`, after
+# `subset`) must form an increasing block without gaps. Repeated or reversed
+# rows are always an error; skipped rows are an error unless allow_gaps = TRUE,
+# as for the gaps of a time index.
+check_row_order <- function(rows, allow_gaps = FALSE) {
+  if (length(rows) < 2L) {
+    return(invisible(NULL))
+  }
+  step <- diff(rows)
+  if (any(step <= 0)) {
+    first <- which(step <= 0)[1L]
+    fgls_abort(
+      sprintf(
+        paste0(
+          "The rows selected by `subset` are repeated or out of order (row %d ",
+          "follows row %d). FGLS uses lags, so the sample must be consecutive ",
+          "periods in time order: select an increasing block of rows, e.g. ",
+          "subset = 51:200."
+        ),
+        rows[first + 1L], rows[first]
+      ),
+      "time_index"
+    )
+  }
+  gaps <- which(step > 1)
+  if (length(gaps)) {
+    shown <- utils::head(gaps, .max_locations)
+    desc <- paste(sprintf("%d -> %d", rows[shown], rows[shown + 1L]), collapse = ", ")
+    more <- if (length(gaps) > .max_locations) {
+      sprintf(" and %d more", length(gaps) - .max_locations)
+    } else {
+      ""
+    }
+    if (!allow_gaps) {
+      fgls_abort(
+        sprintf(
+          paste0(
+            "The rows selected by `subset` skip rows of the data in %d place(s) ",
+            "(rows %s%s). Lags would silently skip the left-out periods. Select a ",
+            "contiguous block of rows, or use allow_gaps = TRUE to treat lags as ",
+            "positional."
+          ),
+          length(gaps), desc, more
+        ),
+        "time_index"
+      )
+    }
+    fgls_warn(
+      sprintf(
+        paste0(
+          "The rows selected by `subset` skip rows of the data in %d place(s) ",
+          "(rows %s%s); lags are positional (allow_gaps = TRUE)."
+        ),
+        length(gaps), desc, more
+      ),
+      "specification"
+    )
+  }
+  invisible(NULL)
+}
+
 # ------------------------------------------------------------------- missing values
 na_policy <- function(na.action) {
   if (is.null(na.action)) {
@@ -176,7 +276,8 @@ na_policy <- function(na.action) {
 
 # Rows to keep given missing values. For time series only leading and trailing
 # rows can be dropped: dropping interior rows would make the lags wrong.
-missing_rows_keep <- function(nan_rows, policy, time_series, index) {
+# `rows` (see format_locations()) names the offending rows in the messages.
+missing_rows_keep <- function(nan_rows, policy, time_series, index, rows = NULL) {
   if (!any(nan_rows)) {
     return(rep(TRUE, length(nan_rows)))
   }
@@ -188,7 +289,7 @@ missing_rows_keep <- function(nan_rows, policy, time_series, index) {
           "Missing values (NA) found at %s. Remove or impute them, or use ",
           "na.action = na.omit."
         ),
-        format_locations(index, bad)
+        format_locations(index, bad, rows)
       ),
       "missing"
     )
@@ -211,7 +312,7 @@ missing_rows_keep <- function(nan_rows, policy, time_series, index) {
           "or trailing missing values can be dropped, because dropping interior ",
           "rows would make the lags wrong. Impute or interpolate them first."
         ),
-        format_locations(index, interior)
+        format_locations(index, interior, rows)
       ),
       "missing"
     )
@@ -223,8 +324,11 @@ missing_rows_keep <- function(nan_rows, policy, time_series, index) {
 
 # ------------------------------------------------------------------------ main entry
 # Validate y (numeric vector) and X (numeric matrix with column names).
+# `rows`, when given, are the rows of the user's data that form the sample (from
+# fgls_frame()): they name rows in the messages and, for time series without a
+# time index, must be an increasing block without gaps.
 prepare_data <- function(y, X, y_name = "y", index = NULL, time_series = TRUE,
-                         allow_gaps = FALSE, warn_no_const = TRUE) {
+                         allow_gaps = FALSE, warn_no_const = TRUE, rows = NULL) {
   y <- as.numeric(y)
   X <- as.matrix(X)
   storage.mode(X) <- "double"
@@ -242,12 +346,15 @@ prepare_data <- function(y, X, y_name = "y", index = NULL, time_series = TRUE,
     fgls_abort(
       sprintf(
         "Infinite values found at %s. Replace them first.",
-        format_locations(index, which(inf_rows))
+        format_locations(index, which(inf_rows), rows)
       ),
       "missing"
     )
   }
-  if (time_series) check_time_index(index, allow_gaps = allow_gaps)
+  if (time_series) {
+    check_time_index(index, allow_gaps = allow_gaps, rows = rows)
+    if (is.null(index) && !is.null(rows)) check_row_order(rows, allow_gaps = allow_gaps)
+  }
 
   n <- nrow(X)
   q <- ncol(X)

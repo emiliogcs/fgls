@@ -9,7 +9,7 @@ bench_data <- function(formula, data, subset_expr, env, na.action, time, allow_g
   )
   d <- prepare_data(frame$y, frame$X,
     y_name = frame$y_name, index = frame$index,
-    time_series = time_series, allow_gaps = allow_gaps
+    time_series = time_series, allow_gaps = allow_gaps, rows = frame$rows
   )
   list(frame = frame, d = d)
 }
