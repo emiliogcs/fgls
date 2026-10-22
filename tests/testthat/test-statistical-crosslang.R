@@ -1,4 +1,4 @@
-# R vs pyfgls distributional agreement (CLAUDE_R_PACKAGE.md, Section 4): the
+# R vs pyfgls distributional agreement (see vignettes/validation.Rmd): the
 # data sets of tools/compare_python_r.R are regenerated in R from their seeds and
 # refitted; the pyfgls outputs on the same data and folds are stored in
 # inst/extdata/cross_language.rds. Slow: FGLS_SLOW_TESTS=true.
