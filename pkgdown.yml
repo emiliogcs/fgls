@@ -1,0 +1,13 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  combined: combined.html
+  fgls-intro: fgls-intro.html
+  heteroskedasticity: heteroskedasticity.html
+  serial-correlation: serial-correlation.html
+  validation: validation.html
+last_built: 2026-10-22T15:13Z
+urls:
+  reference: https://emiliogcs.github.io/fgls/reference
+  article: https://emiliogcs.github.io/fgls/articles
