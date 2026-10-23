@@ -1,6 +1,6 @@
 # Monte Carlo helpers for the statistical (paper-replication) tests. These tests
 # are slow: they run only when the environment variable FGLS_SLOW_TESTS is
-# "true" (.github/workflows/statistical.yaml, on demand or nightly) and never on
+# "true" (.github/workflows/statistical.yaml, on demand or weekly) and never on
 # CRAN. FGLS_SLOW_CORES sets the number of forked workers (default 1; the
 # workflow uses the runner's core count). Results do not depend on it: every
 # replication has its own seed.

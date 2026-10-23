@@ -1,15 +1,11 @@
 # Paper-replication (Monte Carlo) acceptance tests: slow, not on CRAN.
 #
-# Runs on demand (workflow_dispatch). The nightly schedule only runs when the
-# repository variable FGLS_NIGHTLY is "true": a schedule event carries no
-# repository payload, so the job cannot tell by itself whether the repository
-# is private, and on a private repository the run (well over an hour on a
-# 2-vCPU runner) would use up the Actions minutes. After making the repository
-# public, set the variable (Settings > Secrets and variables > Actions >
-# Variables, or `gh variable set FGLS_NIGHTLY --body true`).
+# Runs weekly, to catch changes in dependencies, R or the runner's BLAS that
+# move the results (the code itself only changes on push), and on demand
+# (workflow_dispatch) before releases and after changes to the estimators.
 on:
   schedule:
-    - cron: "41 2 * * *"
+    - cron: "41 2 * * 0" # weekly, Sunday 02:41 UTC
   workflow_dispatch:
 
 name: statistical
@@ -18,7 +14,6 @@ permissions: read-all
 
 jobs:
   statistical:
-    if: github.event_name != 'schedule' || vars.FGLS_NIGHTLY == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
