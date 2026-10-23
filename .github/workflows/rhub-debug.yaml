@@ -18,55 +18,38 @@ jobs:
         config: nosuggests
       id: rhub-setup
 
-  hang:
+  baseR:
     needs: setup
     runs-on: ubuntu-latest
-    name: ${{ matrix.variant }}-${{ matrix.rep }}
+    name: base-R ${{ matrix.limit }} ${{ matrix.rep }}
     strategy:
       fail-fast: false
       matrix:
         config: ${{ fromJson(needs.setup.outputs.containers) }}
-        variant: [fixed-trace]
+        limit: [omp-limit-2, no-omp-limit]
         rep: [1, 2, 3]
     container:
       image: ${{ matrix.config.container }}
     steps:
-      - uses: r-hub/actions/checkout@v1
-      - uses: r-hub/actions/setup-deps@v1
-        with:
-          job-config: ${{ matrix.config.job-config }}
-      - name: Check with a watchdog
+      - name: Base R LAPACK loop (no packages)
         shell: bash
         run: |
-          cat > tests/testthat/helper-zzz-trace.R <<'TRACE'
-          test_that <- function(desc, code) {
-            cat(format(Sys.time(), "%H:%M:%OS2"), desc, "\n", file = "/tmp/fgls-trace.txt", append = TRUE)
-            testthat::test_that(desc, code)
+          if [ "${{ matrix.limit }}" = "no-omp-limit" ]; then unset OMP_THREAD_LIMIT; fi
+          echo "OMP_THREAD_LIMIT=${OMP_THREAD_LIMIT:-unset}" > report.txt
+          cat > loop.R <<'EOF2'
+          set.seed(1)
+          A <- crossprod(matrix(rnorm(300 * 300), 300)) + diag(300)
+          X <- matrix(rnorm(200 * 63), 200)
+          for (i in 1:100) {
+            L <- chol(A); S <- svd(X); E <- eigen(crossprod(X), symmetric = TRUE); B <- solve(A)
+            if (i %% 10 == 0) cat(format(Sys.time(), "%H:%M:%OS2"), "iteration", i, "\n")
           }
-          TRACE
-          R -q -e 'si <- sessionInfo(); cat("BLAS:", si$BLAS, "\nLAPACK:", si$LAPACK, "\n"); print(extSoftVersion()[c("BLAS")]); cat("threads:", parallel::detectCores(), "\n")' > blas.txt 2>&1
-          env | grep -E "^(OMP|OPENBLAS|FLEXIBLAS|MKL|GOMP)" >> blas.txt || true
-          R CMD build --no-manual . > build.out 2>&1
-          timeout 660 R CMD check --no-manual --extra-arch fgls_*.tar.gz > check.out 2>&1 &
-          pid=$!
-          status="finished"
-          for i in $(seq 1 48); do
-            sleep 10
-            kill -0 $pid 2>/dev/null || break
-            if [ $i -eq 48 ]; then status="HUNG"; fi
-          done
-          {
-            echo "variant=${{ matrix.variant }} rep=${{ matrix.rep }} status=$status"
-            if [ "$status" = "HUNG" ]; then
-              echo "--- processes"
-              ps -eo pid,ppid,stat,etime,nlwp,wchan:24,args --forest 2>/dev/null | grep -v "ps -eo" | cut -c1-220 || ls /proc | head
-            fi
-            echo "--- BLAS"; cat blas.txt
-            echo "--- test trace (last 12)"; tail -12 /tmp/fgls-trace.txt 2>/dev/null || true
-            echo "--- test failures"; tail -c 3000 fgls.Rcheck/tests/testthat.Rout.fail 2>/dev/null || true
-            echo "--- tail of 00check.log"
-            tail -8 fgls.Rcheck/00check.log 2>/dev/null || true
-          } > report.txt || true
-          wait $pid || true
+          cat("done\n")
+          EOF2
+          start=$(date +%s)
+          if timeout 240 Rscript --vanilla loop.R > loop.out 2>&1; then st=finished; else st="HUNG/failed (exit $?)"; fi
+          echo "status=$st after $(( $(date +%s) - start ))s" >> report.txt
+          tail -3 loop.out >> report.txt
           msg=$(sed -e 's/%/%25/g' report.txt | awk 'BEGIN{ORS="%0A"} {print}')
-          echo "::error title=${{ matrix.variant }}-${{ matrix.rep }}::$msg"
+          echo "::error title=${{ matrix.limit }}-${{ matrix.rep }}::$msg"
+
