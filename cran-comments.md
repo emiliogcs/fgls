@@ -20,8 +20,8 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 * R-hub v2 (R-devel): linux, windows, macos, macos-arm64, atlas, mkl, donttest, vnu
   and nosuggests: OK. (R-hub's deprecated `intel` image could not be used: its
   glmnet binary fails to load, `libquadmath.so.0` is missing.)
-* win-builder: R-release (R 4.6.1, Windows Server 2022): 1 note (new submission and the
-  words discussed below; no URL problems). R-devel and R-oldrelease: results pending.
+* win-builder (R-devel, R-release 4.6.1 and R-oldrelease; Windows Server 2022): 1 note
+  on each (new submission and the words discussed below; no URL problems).
 
 ## R CMD check results
 
