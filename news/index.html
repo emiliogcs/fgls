@@ -82,7 +82,7 @@
 <li>The <code>kmax</code> cap and the <code>ar_order</code> check count the Durbin regressors that are actually kept, so dropped lags of trends and seasonal dummies no longer shrink <code>kmax</code>. Without such columns the cap is the pyfgls one.</li>
 <li>
 <code>serial = "ma1"</code> rejects <code>ar_order</code>, <code>kmax</code>, <code>lagged_dep_vars</code> and <code>vcov = "bootstrap"</code> instead of ignoring them.</li>
-<li>Formula-interface behaviour with no pyfgls counterpart: <code>subset</code>, <code>na.action</code> (including <code>na.exclude</code> padding), row-numbered error messages, and checks of time-series row order and time indexes.</li>
+<li>Formula-interface behavior with no pyfgls counterpart: <code>subset</code>, <code>na.action</code> (including <code>na.exclude</code> padding), row-numbered error messages, and checks of time-series row order and time indexes.</li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

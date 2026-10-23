@@ -817,8 +817,9 @@ cross-validation folds (pyfgls 0.1.0):</p>
 selected AR order is identical in every data set. In about 1% of the
 Lasso data sets the degrees of freedom differ by one, because pyfgls
 0.1.0 counts coefficients of order <span class="math inline">\(10^{-17}\)</span> (left by interpolating its Lasso
-path at a knot) as selected. With the fixes proposed to pyfgls,
-everything agrees and the selected sets are identical:</p>
+path at a knot) as selected. With the fixes merged into pyfgls after
+0.1.0 (<code>emiliogcs/pyfgls#2</code>), everything agrees and the
+selected sets are identical:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">xl</span><span class="op">$</span><span class="va">pyfgls_pr2</span><span class="op">$</span><span class="va">version</span></span>
 <span><span class="co">#&gt; [1] "0.1.0 + emiliogcs/pyfgls#2"</span></span>
