@@ -11,15 +11,16 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 
 * local Ubuntu 24.04, R 4.3.3 (reference BLAS): `R CMD check --as-cran` on the built
   tarball: 0 errors, 0 warnings, 1 note (CRAN incoming feasibility: maintainer and
-  URL check). The URLs could not all be verified from the build machine: doi.org and
-  orcid.org were not reachable from it, and the GitHub repository was still private
-  (so its github.com URLs returned 404 and the pkgdown site at
-  <https://emiliogcs.com/fgls/> was not yet published) when the check was run.
+  URL check). Some URLs could not be verified from the build machine, which cannot
+  reach doi.org, orcid.org or emiliogcs.com; the GitHub URLs resolve.
 * GitHub Actions, `R CMD check --as-cran` with the incoming feasibility checks disabled
-  (`_R_CHECK_CRAN_INCOMING_=false`), at commit 474d062: 0 errors, 0 warnings, 0 notes
+  (`_R_CHECK_CRAN_INCOMING_=false`), at commit 411d33a: 0 errors, 0 warnings, 0 notes
   on macOS-latest (R release), windows-latest (R release) and ubuntu-latest (R devel,
   release, oldrel-1 and 4.1).
-* win-builder (devel, release) and R-hub v2: still to be run.
+* R-hub v2 (R-devel): linux, windows, macos, macos-arm64, atlas, mkl, donttest, vnu
+  and nosuggests: OK. (R-hub's deprecated `intel` image could not be used: its
+  glmnet binary fails to load, `libquadmath.so.0` is missing.)
+* win-builder (R-devel, R-release, R-oldrelease): submitted; results pending.
 
 ## R CMD check results
 
