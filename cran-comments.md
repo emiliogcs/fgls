@@ -20,7 +20,8 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 * R-hub v2 (R-devel): linux, windows, macos, macos-arm64, atlas, mkl, donttest, vnu
   and nosuggests: OK. (R-hub's deprecated `intel` image could not be used: its
   glmnet binary fails to load, `libquadmath.so.0` is missing.)
-* win-builder (R-devel, R-release, R-oldrelease): submitted; results pending.
+* win-builder: R-release (R 4.6.1, Windows Server 2022): 1 note (new submission and the
+  words discussed below; no URL problems). R-devel and R-oldrelease: results pending.
 
 ## R CMD check results
 
@@ -30,8 +31,13 @@ R counterpart of the Python package 'pyfgls' (PyPI).
 
 ## Notes for the reviewers
 
-* Words that may be flagged as possibly misspelled in DESCRIPTION (González, Coya, Durbin,
-  Cochrane, Orcutt) are author names and established method names.
+* The words flagged as possibly misspelled in DESCRIPTION are correct:
+  * Perron, Coya and "lez" (the spell checker splits "González" at the accented letter)
+    are author names; Durbin, Cochrane and Orcutt are the names of established
+    estimators (the Durbin regression, the Cochrane-Orcutt estimator);
+  * GLS and FGLS abbreviate (feasible) generalized least squares;
+  * heteroskedastic, heteroskedasticity and skedastic (as in "skedastic function") are
+    standard econometric terms, and "pre" is part of "pre-determined" (regressors).
 * Examples run in well under 5 seconds each; slow Monte Carlo tests are skipped on
   CRAN (`skip_on_cran()` and an opt-in environment variable). Vignettes use small
   simulated data sets and precomputed simulation results (`inst/extdata`).
