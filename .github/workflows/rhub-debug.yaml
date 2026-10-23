@@ -1,4 +1,4 @@
-# Temporary: find the test that hangs in R-hub's nosuggests container.
+# Temporary: fetch a win-builder check log and report it as an annotation.
 on:
   push:
     branches: [ci/rhub-debug]
@@ -8,48 +8,16 @@ name: rhub-debug
 permissions: read-all
 
 jobs:
-  setup:
+  winbuilder-log:
     runs-on: ubuntu-latest
-    outputs:
-      containers: ${{ steps.rhub-setup.outputs.containers }}
     steps:
-    - uses: r-hub/actions/setup@v1
-      with:
-        config: nosuggests
-      id: rhub-setup
-
-  baseR:
-    needs: setup
-    runs-on: ubuntu-latest
-    name: base-R ${{ matrix.limit }} ${{ matrix.rep }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config: ${{ fromJson(needs.setup.outputs.containers) }}
-        limit: [omp-limit-2, no-omp-limit]
-        rep: [1, 2, 3]
-    container:
-      image: ${{ matrix.config.container }}
-    steps:
-      - name: Base R LAPACK loop (no packages)
+      - name: Fetch the win-builder log
         shell: bash
         run: |
-          if [ "${{ matrix.limit }}" = "no-omp-limit" ]; then unset OMP_THREAD_LIMIT; fi
-          echo "OMP_THREAD_LIMIT=${OMP_THREAD_LIMIT:-unset}" > report.txt
-          cat > loop.R <<'EOF2'
-          set.seed(1)
-          A <- crossprod(matrix(rnorm(300 * 300), 300)) + diag(300)
-          X <- matrix(rnorm(200 * 63), 200)
-          for (i in 1:100) {
-            L <- chol(A); S <- svd(X); E <- eigen(crossprod(X), symmetric = TRUE); B <- solve(A)
-            if (i %% 10 == 0) cat(format(Sys.time(), "%H:%M:%OS2"), "iteration", i, "\n")
-          }
-          cat("done\n")
-          EOF2
-          start=$(date +%s)
-          if timeout 240 Rscript --vanilla loop.R > loop.out 2>&1; then st=finished; else st="HUNG/failed (exit $?)"; fi
-          echo "status=$st after $(( $(date +%s) - start ))s" >> report.txt
-          tail -3 loop.out >> report.txt
-          msg=$(sed -e 's/%/%25/g' report.txt | awk 'BEGIN{ORS="%0A"} {print}')
-          echo "::error title=${{ matrix.limit }}-${{ matrix.rep }}::$msg"
-
+          base=https://win-builder.r-project.org/3DYzAVR8YEYu
+          curl -sS --fail -o check.log "$base/00check.log" || echo "fetch failed" > check.log
+          curl -sS "$base/" | sed -e 's/<[^>]*>/ /g' | tr -s ' ' | grep -v "^ *$" | head -40 > listing.txt || true
+          for f in check.log listing.txt; do
+            msg=$(sed -e 's/%/%25/g' -e 's/\r//g' "$f" | awk 'BEGIN{ORS="%0A"} {print}')
+            echo "::error title=$f::$msg"
+          done
