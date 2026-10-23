@@ -46,7 +46,8 @@ Suggests:
     xts,
     zoo
 VignetteBuilder:
-    knitr
+    knitr,
+    rmarkdown
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
