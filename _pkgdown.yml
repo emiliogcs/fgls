@@ -1,7 +1,34 @@
 url: https://emiliogcs.com/fgls/
+
+# The site wears the design of emiliogcs.com/code/ (the pyfgls documentation):
+# the header, footer, fonts and colours of emiliogcs.com, whose fonts and
+# favicon it loads from the same domain (/assets/fonts/, /favicon.svg).
+# Styles in pkgdown/extra.css; the theme switch (added to the footer) and the
+# contents on narrow screens in pkgdown/extra.js. The header and the footer
+# below are copies of the site's: keep them in step with its index.html.
 template:
   bootstrap: 5
   math-rendering: mathjax
+  includes:
+    in_header: |
+      <meta name="color-scheme" content="light dark">
+      <meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)">
+      <meta name="theme-color" content="#0F0F0E" media="(prefers-color-scheme: dark)">
+      <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+      <link rel="preload" href="/assets/fonts/eb-garamond-400.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="preload" href="/assets/fonts/ibm-plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+      <script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+    before_body: |
+      <header class="wrap site-header">
+        <p class="name"><a href="/">Emilio González Coya</a></p>
+        <nav class="nav" aria-label="Primary">
+          <ul>
+            <li><a href="/#research">research</a></li>
+            <li><a href="/code/">code</a></li>
+            <li><a href="/contact/">contact</a></li>
+          </ul>
+        </nav>
+      </header>
 
 home:
   title: "fgls: Feasible GLS for serial correlation and heteroskedasticity"
@@ -10,6 +37,23 @@ navbar:
   structure:
     left: [intro, reference, articles, news]
     right: [search, github]
+
+footer:
+  structure:
+    left: [contact]
+    right: [developed_by, built_with]
+  components:
+    contact: |
+      <h2 class="label" id="contact-h">Contact</h2>
+      <div class="body footer-row">
+      <ul class="links">
+      <li><a href="/contact/">email</a></li>
+      <li><a href="https://scholar.google.com/citations?user=ekQ7IjcAAAAJ">google scholar</a></li>
+      <li><a href="https://github.com/emiliogcs">github</a></li>
+      <li><a href="https://www.linkedin.com/in/emiliogcs/">linkedin</a></li>
+      </ul>
+      </div>
+      <p class="colophon">© 2026 Emilio González Coya Sandoval</p>
 
 articles:
   - title: Getting started

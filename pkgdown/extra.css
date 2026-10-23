@@ -1,0 +1,1385 @@
+/* fgls site: the design of emiliogcs.com/code/ laid over pkgdown's Bootstrap 5
+   template. Tokens, fonts, header and footer are the site's (assets/site.css
+   in emiliogcs/emiliogcs.github.io); the rest translates its code page:
+   prose in the serif, code and metadata in mono, code between hairlines, a
+   sticky contents column from 1200px. The fonts are served by emiliogcs.com. */
+
+/* ---------------------------------------------------------------- fonts */
+
+@font-face {
+  font-family: "EB Garamond";
+  src: url("/assets/fonts/eb-garamond-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("/assets/fonts/eb-garamond-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/assets/fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Garamond Fallback";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif"), local("Tinos");
+  size-adjust: 94.17%;
+  ascent-override: 106.94%;
+  descent-override: 31.65%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Plex Fallback";
+  src: local("Menlo"), local("Menlo-Regular"), local("Courier New"), local("CourierNewPSMT"), local("Liberation Mono"), local("Cousine");
+  size-adjust: 99.8%;
+  ascent-override: 102.7%;
+  descent-override: 27.55%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------- tokens */
+
+:root {
+  --paper: #F5F3EE;
+  --ink: #151515;
+  --muted: #6B6A66;
+  --rule: #D9D6CF;
+  --accent: #8C2F23; /* oxblood */
+
+  --serif: "EB Garamond", "Garamond Fallback", Garamond, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", "Plex Fallback", ui-monospace, Menlo, Consolas, monospace;
+
+  --gutter: 20px;
+  --gap: 24px;
+  --max: 1280px;
+
+  color-scheme: light dark;
+}
+/* Dark follows the system unless the visitor picked a theme with the switch
+   in the footer (extra.js, as site.js on the rest of the site, sets
+   data-theme="light" or "dark" on <html>; the choice is shared with it). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F0F0E;
+    --ink: #ECE9E2;
+    --muted: #8E8B84;
+    --rule: #2A2926;
+    --accent: #D27A68;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F0F0E;
+  --ink: #ECE9E2;
+  --muted: #8E8B84;
+  --rule: #2A2926;
+  --accent: #D27A68;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+@media (min-width: 900px) {
+  :root {
+    --gutter: 48px;
+  }
+}
+
+/* Bootstrap's own variables, so its components (dropdowns, search, tooltips,
+   tables) take the site's inks. [data-bs-theme] also covers the navbar. */
+:root,
+[data-bs-theme] {
+  --bs-body-bg: var(--paper);
+  --bs-body-color: var(--ink);
+  --bs-body-font-family: var(--serif);
+  --bs-body-font-size: 18px;
+  --bs-body-line-height: 1.6;
+  --bs-font-sans-serif: var(--serif);
+  --bs-font-monospace: var(--mono);
+  --bs-emphasis-color: var(--ink);
+  --bs-secondary-color: var(--muted);
+  --bs-tertiary-color: var(--muted);
+  --bs-secondary-bg: var(--paper);
+  --bs-tertiary-bg: var(--paper);
+  --bs-border-color: var(--rule);
+  --bs-primary: var(--accent);
+  --bs-heading-color: inherit;
+  --bs-border-radius: 0;
+}
+
+/* ----------------------------------------------------------------- base */
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 18px/1.6 var(--serif);
+  font-variant-numeric: oldstyle-nums;
+  font-kerning: normal;
+  overflow-wrap: break-word;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+:root[data-theme="dark"] body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 400;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Skip link, as the site's. */
+a[href="#main"].visually-hidden-focusable:focus {
+  top: 8px;
+  left: 8px;
+  margin: 0;
+  padding: 4px 8px;
+  background: var(--paper);
+  font: 13px/1.6 var(--mono);
+}
+
+/* --------------------------------------------------------------- layout */
+
+/* The site's .wrap for every container. */
+body > .container,
+.navbar > .container,
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--max));
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* No sticky footer: the page ends where its content does. */
+html,
+body {
+  height: auto;
+  scroll-padding: 0;
+}
+body > .container {
+  display: block;
+  min-height: 0;
+  padding-top: 72px;
+}
+@media (min-width: 900px) {
+  body > .container {
+    padding-top: 80px;
+  }
+}
+
+body > .container > .row {
+  display: block;
+  margin: 0;
+}
+.row > main,
+.row > aside {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.row > main {
+  min-width: 0;
+  max-width: 800px;
+}
+
+/* Twelve columns on desktop, text from column 3, as on the site. */
+@media (min-width: 900px) {
+  body > .container > .row {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    align-items: start;
+  }
+  .row > main,
+  .row > aside {
+    grid-column: 3 / -1;
+  }
+}
+
+/* --------------------------------------------------------------- header */
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: 32px;
+  row-gap: 4px;
+  padding-top: 28px;
+}
+@media (min-width: 900px) {
+  .site-header {
+    padding-top: 40px;
+  }
+}
+.site-header p,
+.site-header ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-header .name {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;
+}
+.site-header .nav {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 24px;
+  text-transform: lowercase;
+}
+.site-header .nav ul,
+footer .links {
+  display: flex;
+  flex-wrap: wrap;
+}
+.site-header .nav a,
+footer .links a {
+  display: inline-block;
+  min-height: 24px;
+}
+/* The dot hangs off the end of each item, so a wrapped row never starts with one. */
+.site-header .nav li:not(:last-child)::after,
+footer .links li:not(:last-child)::after,
+#navbar > .navbar-nav:first-child > .nav-item:not(:last-child)::after {
+  content: "·";
+  content: "·" / "";
+  margin-inline: 0.6em;
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------- package bar */
+/* pkgdown's navbar, set as a section of the site: a hairline, the package
+   and version as a label, then its pages in the site's mono link row. On
+   wide screens the pages start at column 3, with the text. */
+
+.navbar {
+  position: static;
+  display: block;
+  color: var(--ink);
+  margin-top: 56px;
+  padding: 0;
+  background: none !important;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 24px;
+  font-variant-numeric: lining-nums;
+}
+.navbar.headroom {
+  transform: none;
+  transition: none;
+}
+@media (min-width: 900px) {
+  .navbar {
+    margin-top: 64px;
+  }
+}
+.navbar > .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  row-gap: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  container-type: inline-size;
+}
+.navbar-brand {
+  margin: 0 0.8em 0 0;
+  padding: 0;
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: inherit;
+}
+.navbar-brand:hover,
+.navbar-brand:focus {
+  color: var(--accent);
+}
+.navbar .nav-text {
+  margin-right: 0 !important;
+  font-size: 12px;
+  color: var(--muted) !important;
+}
+.navbar-toggler {
+  display: none;
+}
+#navbar.collapse:not(.show),
+#navbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 32px;
+  flex: 1 0 100%;
+  margin: 0 !important; /* over Bootstrap's .ms-3 */
+}
+@media (min-width: 900px) {
+  /* columns 3 to 12 of the twelve, pushed right: brand and version keep 1-2 */
+  #navbar.collapse:not(.show),
+  #navbar {
+    flex: 0 0 auto;
+    width: calc(100cqw - (100cqw - 11 * var(--gap)) / 6 - 2 * var(--gap));
+    margin-left: auto !important; /* over Bootstrap's .ms-3 */
+  }
+}
+.navbar .navbar-nav {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin: 0 !important;
+  padding: 0;
+  text-transform: lowercase;
+}
+.navbar .nav-item {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+}
+.navbar .navbar-nav .nav-link {
+  display: inline-block;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible,
+.navbar .nav-link.show {
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+}
+/* The page you are on: underlined, as the theme in use in the footer. */
+.navbar .nav-item.active .nav-link {
+  background: none;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+#navbar > .navbar-nav:last-child {
+  column-gap: 24px;
+}
+/* GitHub: a word and an arrow, as the site's outbound links. */
+.navbar .fab.fa-github {
+  display: inline;
+  font-family: inherit !important;
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+  -webkit-font-smoothing: inherit;
+}
+.navbar .fa-github::before {
+  content: "github ↗";
+  content: "github ↗" / "";
+}
+
+/* Articles menu: + and − as the site's disclosures, a plain sheet below. */
+.navbar .dropdown-toggle::after {
+  content: "+";
+  margin-left: 0.4em;
+  border: 0;
+  vertical-align: baseline;
+}
+.navbar .dropdown-toggle[aria-expanded="true"]::after {
+  content: "−";
+}
+.navbar .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 16rem;
+  max-width: min(32rem, 100vw - 2 * var(--gutter));
+  max-height: 70vh;
+  margin-top: 8px;
+  padding: 8px 0;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--paper);
+  box-shadow: none;
+  font-size: 13px;
+  line-height: 20px;
+  text-transform: none;
+}
+.navbar .dropdown-item {
+  padding: 4px 16px;
+  white-space: normal;
+  color: inherit;
+  background: none;
+}
+.navbar .dropdown-item:hover,
+.navbar .dropdown-item:focus {
+  color: var(--accent);
+  background: none;
+}
+.navbar .dropdown-header {
+  padding: 8px 16px 2px;
+  font-size: 11px;
+  line-height: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.navbar .dropdown-divider {
+  margin: 6px 0;
+  border-color: var(--rule);
+  opacity: 1;
+}
+.navbar .dropdown-menu > li:first-child > .dropdown-divider {
+  display: none;
+}
+
+/* Search: a hairline to write on. */
+.navbar form {
+  margin: 0;
+}
+.navbar input[type="search"] {
+  width: 12rem;
+  min-height: 24px;
+  margin: 0;
+  padding: 0 0 1px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  box-shadow: none;
+  transition: border-color 0.2s;
+}
+.navbar input[type="search"]::placeholder {
+  color: var(--muted);
+  text-transform: lowercase;
+  opacity: 1;
+}
+.navbar input[type="search"]:focus {
+  border-bottom-color: var(--accent);
+  outline: none;
+  box-shadow: none;
+}
+@media (max-width: 479px) {
+  #navbar > .navbar-nav:last-child,
+  #navbar > .navbar-nav:last-child .nav-item:first-child,
+  .navbar form,
+  .algolia-autocomplete,
+  .navbar input[type="search"] {
+    width: 100%;
+  }
+}
+.algolia-autocomplete .aa-dropdown-menu {
+  margin-top: 8px;
+  padding: 8px 0;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 12px/18px var(--mono);
+  text-transform: none;
+}
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion {
+  padding: 6px 16px;
+  font-size: 12px;
+  line-height: 18px;
+}
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion:hover,
+.algolia-autocomplete .aa-dropdown-menu .aa-cursor {
+  background: none;
+  color: var(--accent);
+}
+.algolia-autocomplete .aa-dropdown-menu .search-details {
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.18em;
+}
+
+/* --------------------------------------------------------- page header */
+
+.page-header {
+  min-height: 0 !important;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.page-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.page-header .subtitle,
+.page-header .author,
+.page-header .date {
+  margin-top: 16px;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--muted);
+}
+/* "Source: R/fgls.R": the site's mono note. */
+.page-header small,
+.page-header .dont-index {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: lining-nums;
+  color: var(--muted);
+}
+.page-header small code {
+  font-size: 1em;
+}
+img.logo {
+  display: none;
+}
+
+/* ------------------------------------------------------- contents column */
+/* "On this page" (bootstrap-toc): the code page's contents, sticky in
+   columns 1-2 from 1200px. Narrower, extra.js offers it as a closed
+   "contents +" above the text; the sidebar of the home page goes below. */
+
+.row > aside:has(#toc) {
+  display: none;
+}
+@media (min-width: 1200px) {
+  .row > aside {
+    grid-column: 1 / 3;
+    grid-row: 1;
+  }
+  .row > aside:has(#toc) {
+    display: block;
+  }
+  .toc-top {
+    display: none;
+  }
+}
+#toc {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+aside,
+.toc-top {
+  font-family: var(--mono);
+  font-variant-numeric: lining-nums;
+  font-size: 12px;
+  line-height: 18px;
+}
+aside h2,
+#toc h2 {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+#toc .nav,
+.toc-top ul {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#toc > .nav .nav,
+.toc-top ul ul {
+  margin: 2px 0 8px 1px;
+  padding-left: 12px;
+  border-left: 1px solid var(--rule);
+}
+#toc a.nav-link,
+#toc > .nav a.nav-link,
+.toc-top a {
+  display: block;
+  margin: 0;
+  padding: 3px 0; /* 24px targets */
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+}
+#toc > .nav > li > a.nav-link,
+.toc-top nav > ul > li > a {
+  color: var(--ink);
+}
+#toc > .nav .nav a.nav-link {
+  margin-left: 0;
+}
+#toc a.nav-link:hover,
+#toc a.nav-link:focus,
+#toc > .nav > li > a.nav-link.active,
+#toc > .nav a.nav-link.active,
+.toc-top a:hover {
+  background: none;
+  color: var(--accent);
+}
+#toc code,
+.toc-top code {
+  font: inherit;
+  padding: 0;
+  background: none;
+}
+
+.toc-top {
+  margin: 48px 0;
+  padding-block: 8px;
+  border-block: 1px solid var(--rule);
+  font-size: 13px;
+}
+.toc-top > summary {
+  display: inline-block;
+  min-height: 24px;
+  margin: 0;
+  line-height: 24px;
+  list-style: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.toc-top > summary::-webkit-details-marker {
+  display: none;
+}
+.toc-top > summary:hover {
+  color: var(--accent);
+}
+.toc-top .sign::before {
+  content: "+";
+}
+.toc-top[open] .sign::before {
+  content: "−";
+}
+.toc-top nav {
+  padding: 8px 0 4px;
+}
+
+/* The home page's sidebar (links, licence, citation, developers): a column
+   from 1200px; narrower, a row of short lists under a hairline. */
+.template-home .row > aside {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px 48px;
+  margin-top: 72px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+@media (min-width: 1200px) {
+  .template-home .row > aside {
+    display: block;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .template-home .row > aside > div + div {
+    margin-top: 32px;
+  }
+}
+aside .list-unstyled {
+  margin: 0;
+  padding: 0;
+}
+aside .list-unstyled li {
+  margin: 0;
+  padding: 3px 0;
+}
+aside .list-unstyled li small {
+  font-size: inherit;
+}
+aside .roles {
+  display: block;
+  color: var(--muted);
+}
+.orcid {
+  color: var(--muted);
+}
+aside .orcid {
+  margin-left: 2px;
+}
+aside a:hover .orcid {
+  color: var(--accent);
+}
+aside img {
+  display: block;
+  margin-top: 3px;
+}
+
+/* ----------------------------------------------------------------- text */
+
+main {
+  text-wrap: pretty;
+}
+main p,
+main ul,
+main ol,
+main dl,
+main blockquote,
+main pre,
+main table,
+main details {
+  margin: 16px 0 0;
+}
+main :is(p, ul, ol, dl, blockquote) {
+  max-width: 680px;
+}
+main ul {
+  padding-left: 1.2em;
+  list-style: disc;
+}
+main ol {
+  padding-left: 1.5em;
+}
+main li + li {
+  margin-top: 0.4em;
+}
+main li > p {
+  margin-top: 0;
+}
+main strong,
+main b {
+  font-weight: 700;
+}
+main blockquote {
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+}
+main blockquote > :first-child {
+  margin-top: 0;
+}
+main hr {
+  margin: 48px 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  opacity: 1;
+}
+
+/* Sections: a hairline, the heading as a mono label, as on the code page. */
+main .section.level2,
+main .ref-description + .section,
+.template-reference-topic main .section.level2 {
+  margin-top: 72px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+.template-reference-topic main .ref-description.section {
+  margin-top: 32px;
+  padding-top: 0;
+  border-top: 0;
+}
+main h2 {
+  margin: 0 0 32px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;
+  color: var(--muted);
+}
+main h2 code {
+  font-size: 1em;
+}
+main h3 {
+  margin: 56px 0 16px;
+  font-size: clamp(24px, 2.6vw, 30px);
+  font-weight: 400;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+main h2 + h3,
+main h2 + .section > h3:first-child {
+  margin-top: 0;
+}
+main h4 {
+  margin: 40px 0 12px;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+main h5,
+main h6 {
+  margin: 32px 0 8px;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 400;
+}
+main :is(h2, h3, h4, h5, h6)[id],
+main dt[id] {
+  scroll-margin-top: 24px;
+}
+main :is(h3, h4, h5) + :is(p, ul, ol, dl, .sourceCode, table) {
+  margin-top: 0;
+}
+main h2 + :is(p, ul, ol, dl, .sourceCode) {
+  margin-top: 0;
+}
+
+/* Section anchors: a muted # on hover, as on the code page. */
+a.anchor {
+  display: inline;
+  width: auto;
+  height: auto;
+  margin-left: 0.3em;
+  background: none;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+a.anchor::after {
+  content: "#";
+}
+:is(h2, h3, h4, h5, h6, dt):is(:hover, :target) .anchor,
+a.anchor:focus-visible {
+  display: inline;
+  opacity: 1;
+}
+
+/* Links in the text: a hairline under them that darkens on hover. */
+main a:not(.anchor, .page-header a, .toc-top a) {
+  text-decoration-line: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+main a:not(.anchor, .page-header a, .toc-top a):hover {
+  text-decoration-color: currentColor;
+}
+
+/* Inline code in the mono at the code page's size. */
+code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  font-variant-numeric: lining-nums;
+}
+main a code,
+code a:any-link {
+  color: inherit;
+}
+
+/* Definitions (arguments, the reference and article indexes): mono terms,
+   serif descriptions indented beneath, as the code page's API entries. */
+main dl {
+  max-width: 720px;
+}
+main dt {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  font-variant-numeric: lining-nums;
+}
+main dt:first-child {
+  margin-top: 0;
+}
+main dt code {
+  font-size: 1em;
+}
+main dd {
+  margin: 2px 0 0 16px;
+  padding: 0;
+  font-size: 17px;
+  line-height: 1.55;
+}
+main dd > p:first-child {
+  margin-top: 0;
+}
+main dt:target,
+main dt:target + dd {
+  margin-left: -13px;
+  padding-left: 12px;
+  border-left: 1px solid var(--accent);
+}
+main dt:target + dd {
+  margin-left: 3px;
+}
+.section-desc {
+  max-width: 680px;
+  color: var(--muted);
+  font-style: italic;
+}
+.section-desc p {
+  margin: 0;
+}
+/* The reference index: pkgdown follows each titled group with an untitled
+   one holding its topics; that one continues the group, without a rule.
+   Function names do not break inside. */
+.template-reference-index main .section.level2:not(:has(> h2)) {
+  margin-top: 24px;
+  padding-top: 0;
+  border-top: 0;
+}
+.template-reference-index main dl:empty {
+  display: none;
+}
+.template-reference-index main dt code {
+  overflow-wrap: normal;
+}
+
+/* Tables: rows between hairlines, mono heads; wide ones scroll in place. */
+main table,
+main table.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: inherit;
+  --bs-table-border-color: var(--rule);
+  --bs-table-accent-bg: transparent;
+  --bs-table-striped-bg: transparent;
+  --bs-table-hover-bg: transparent;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.45;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+main table > :not(caption) > * > *,
+main table.table > :not(caption) > * > * {
+  padding: 7px 16px 7px 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  text-align: left;
+  vertical-align: top;
+}
+main table th,
+main table.table th,
+main table thead td {
+  border-bottom-color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--muted);
+}
+main table :is(th, td):last-child {
+  padding-right: 0;
+}
+main table > :not(:first-child) {
+  border-top: 0;
+}
+main table caption {
+  caption-side: top;
+  padding: 0 0 8px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Figures: the white of a plot falls into the paper; in the dark it inverts. */
+main img {
+  max-width: 100%;
+  height: auto;
+  mix-blend-mode: multiply;
+}
+main .figure,
+main figure {
+  margin: 24px 0 0;
+}
+main .caption,
+main figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 16px;
+}
+pre .r-plt img,
+pre .img img {
+  margin: 8px 0;
+  background: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) main img {
+    filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: screen;
+  }
+}
+:root[data-theme="dark"] main img {
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: screen;
+}
+
+/* Math: MathJax typesets it; wide displays scroll in place. */
+.math.display {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 4px;
+}
+mjx-container[display="true"] {
+  margin: 0 !important;
+}
+
+/* ----------------------------------------------------------------- code */
+/* Code between hairlines, with a mono label and the copy button above, as
+   on the code page. R output (#>) is set as comments: muted. */
+
+div.sourceCode {
+  position: relative;
+  margin: 20px 0 0;
+  padding-top: 28px;
+  border-block: 1px solid var(--rule);
+  background: none;
+}
+div.sourceCode::before {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 24px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+div.sourceCode:has(> pre.r)::before {
+  content: "r";
+}
+main pre,
+div.sourceCode pre {
+  margin: 0;
+  padding: 4px 0 14px;
+  overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: 13px/1.6 var(--mono);
+  font-variant-numeric: lining-nums;
+  font-variant-ligatures: none;
+  tab-size: 4;
+}
+main div > div > pre {
+  margin-inline: 0;
+  padding-inline: 0;
+}
+pre code,
+main pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: inherit;
+}
+@media (max-width: 479px) {
+  main pre,
+  div.sourceCode pre {
+    font-size: 12px;
+  }
+}
+/* Plain <pre> (the citation's BibTeX, the licence): between hairlines too. */
+main > pre,
+main .section > pre {
+  margin-top: 16px;
+  padding: 12px 0;
+  border-block: 1px solid var(--rule);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Highlighting in the site's three inks: keywords and constants in the
+   accent, comments and output muted, everything else as text. */
+pre code span,
+pre code span:is(.al, .an, .at, .bn, .cf, .ch, .cn, .co, .cv, .do, .dt, .dv, .er, .fl, .fu, .im, .in, .kw, .op, .ot, .pp, .sc, .ss, .st, .va, .vs, .wa) {
+  color: inherit;
+  font-style: normal;
+  font-weight: inherit;
+}
+pre code span:is(.kw, .cf, .cn) {
+  color: var(--accent);
+}
+pre code span:is(.co, .cv, .do, .wa, .r-pr) {
+  color: var(--muted);
+}
+pre code .error,
+pre code .warning {
+  font-weight: inherit;
+  color: var(--accent);
+}
+
+/* pkgdown's copy button, as the code page's: the word, always there. */
+.hasCopyButton .btn-copy-ex,
+.btn-copy-ex {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font: 12px/24px var(--mono);
+  visibility: visible;
+  transition: color 0.2s;
+}
+.btn-copy-ex:hover,
+.btn-copy-ex:focus-visible,
+.btn-copy-ex:active {
+  background: none !important;
+  color: var(--accent) !important;
+}
+.btn-copy-ex .fa,
+.btn-copy-ex i {
+  display: none;
+}
+.btn-copy-ex::before {
+  content: "copy";
+}
+
+/* Tooltips and popovers (copy, footnotes, version) in the site's inks. */
+.tooltip {
+  --bs-tooltip-bg: var(--ink);
+  --bs-tooltip-color: var(--paper);
+  --bs-tooltip-border-radius: 0;
+  --bs-tooltip-font-size: 12px;
+  font-family: var(--mono);
+}
+.popover {
+  --bs-popover-bg: var(--paper);
+  --bs-popover-border-color: var(--rule);
+  --bs-popover-border-radius: 0;
+  --bs-popover-body-color: var(--ink);
+  box-shadow: none;
+  font-family: var(--serif);
+  font-size: 16px;
+}
+
+mark {
+  padding: 0;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: inherit;
+}
+
+/* --------------------------------------------------------------- footer */
+/* The site's footer: a hairline, "Contact" as a label, its links and the
+   theme switch; pkgdown's credit under the copyright line. */
+
+body > .container > footer {
+  display: block;
+  margin: 128px 0 96px;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--rule);
+  background: none;
+  color: var(--ink);
+  font-size: inherit;
+}
+footer div {
+  flex: initial;
+}
+footer .label {
+  margin: 0 0 32px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 24px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;
+  color: var(--muted);
+}
+footer .links,
+footer .theme-switch,
+footer .colophon,
+footer .pkgdown-footer-right {
+  font-family: var(--mono);
+  font-variant-numeric: lining-nums;
+}
+footer .links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 24px;
+}
+footer .links li {
+  display: flex; /* pandoc's line breaks inside the items take no space */
+}
+footer .footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 32px;
+}
+footer .colophon,
+footer .pkgdown-footer-right p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 24px;
+  color: var(--muted);
+}
+footer .colophon {
+  margin-top: 24px;
+}
+footer .pkgdown-footer-right {
+  text-align: left !important;
+}
+footer .pkgdown-footer-right a:hover {
+  color: var(--accent);
+}
+@media (min-width: 900px) {
+  body > .container > footer {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--gap);
+    align-items: start;
+  }
+  footer .pkgdown-footer-left {
+    display: contents;
+  }
+  footer .label {
+    grid-column: 1 / 3;
+    margin-bottom: 0;
+  }
+  footer .footer-row,
+  footer .colophon,
+  footer .pkgdown-footer-right {
+    grid-column: 3 / -1;
+  }
+}
+
+/* Theme switch: theme  auto · light · dark */
+.theme-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  font-size: 13px;
+  line-height: 24px;
+}
+.theme-switch[hidden] {
+  display: none;
+}
+.theme-label {
+  margin-right: 0.8em;
+  color: var(--muted);
+}
+.theme-switch button {
+  min-height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s;
+}
+.theme-switch button + button::before {
+  content: "·";
+  content: "·" / "";
+  margin-inline: 0.6em;
+  color: var(--muted);
+  display: inline-block; /* keeps the dot out of the underline */
+}
+.theme-switch button:hover {
+  color: var(--accent);
+}
+.theme-switch button[aria-pressed="true"] {
+  color: var(--ink);
+  text-decoration-line: underline;
+}
+
+/* ------------------------------------------------------------ motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+  }
+}
+
+/* ------------------------------------------------------------- print */
+
+@media print {
+  :root,
+  :root[data-theme] {
+    --paper: #fff;
+    --ink: #000;
+    --muted: #444;
+    --rule: #bbb;
+    --accent: #000;
+  }
+  body {
+    font-size: 11pt;
+  }
+  .site-header .nav,
+  .navbar,
+  .row > aside,
+  .toc-top,
+  .btn-copy-ex,
+  .theme-switch,
+  a.anchor {
+    display: none !important;
+  }
+  main pre {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+  body > .container,
+  .wrap {
+    width: auto;
+    margin-inline: 0;
+  }
+  body > .container {
+    padding-top: 24px;
+  }
+  body > .container > .row {
+    display: block;
+  }
+}
