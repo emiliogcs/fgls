@@ -1,5 +1,4 @@
-# Temporary: runs R-hub's steps on two platforms and reports the logs as
-# annotations (job logs are not readable from the session that set this up).
+# Temporary: find the test that hangs in R-hub's nosuggests container.
 on:
   push:
     branches: [ci/rhub-debug]
@@ -19,41 +18,48 @@ jobs:
         config: nosuggests
       id: rhub-setup
 
-  linux-containers:
+  hang:
     needs: setup
     runs-on: ubuntu-latest
-    name: ${{ matrix.config.label }}
+    name: ${{ matrix.variant }}-${{ matrix.rep }}
     strategy:
       fail-fast: false
       matrix:
         config: ${{ fromJson(needs.setup.outputs.containers) }}
+        variant: [as-is, no-fork-test]
+        rep: [1, 2, 3]
     container:
       image: ${{ matrix.config.container }}
     steps:
       - uses: r-hub/actions/checkout@v1
-      - uses: r-hub/actions/platform-info@v1
-        with:
-          job-config: ${{ matrix.config.job-config }}
       - uses: r-hub/actions/setup-deps@v1
         with:
           job-config: ${{ matrix.config.job-config }}
-      - uses: r-hub/actions/run-check@v1
-        timeout-minutes: 15
-        continue-on-error: true
-        with:
-          job-config: ${{ matrix.config.job-config }}
-      - name: Report logs as annotations
-        if: always()
+      - name: Check with a watchdog
         shell: bash
         run: |
-          ann() {
-            [ -f "$2" ] || return 0
-            msg=$(tail -c "${3:-6000}" "$2" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN{ORS="%0A"} {print}')
-            echo "::error title=$1::$msg"
-          }
-          log=$(find check -name 00check.log -print -quit)
-          ann "00check.log" "$log" 8000
-          for f in $(find check -name '*.Rout*' -print); do ann "$(basename $f)" "$f" 5000; done
-          ann "vignette build" "$(find check -name 'vignettes*.log' -print -quit)" 4000
-          ls -R check > tree.txt 2>&1 || true; ann "check tree" tree.txt 3000
-          true
+          if [ "${{ matrix.variant }}" = "no-fork-test" ]; then
+            sed -i '/does not depend on cores/,/^})/d' tests/testthat/test-combined.R
+            grep -c "cores = 2L" tests/testthat/test-combined.R || true
+          fi
+          R CMD build --no-manual . > build.out 2>&1
+          timeout 660 R CMD check --no-manual --extra-arch fgls_*.tar.gz > check.out 2>&1 &
+          pid=$!
+          status="finished"
+          for i in $(seq 1 48); do
+            sleep 10
+            kill -0 $pid 2>/dev/null || break
+            if [ $i -eq 48 ]; then status="HUNG"; fi
+          done
+          {
+            echo "variant=${{ matrix.variant }} rep=${{ matrix.rep }} status=$status"
+            if [ "$status" = "HUNG" ]; then
+              echo "--- processes"
+              ps -eo pid,ppid,stat,etime,nlwp,wchan:24,args --forest 2>/dev/null | grep -v "ps -eo" | cut -c1-220 || ls /proc | head
+            fi
+            echo "--- tail of 00check.log"
+            tail -8 fgls.Rcheck/00check.log 2>/dev/null
+          } > report.txt
+          wait $pid || true
+          msg=$(sed -e 's/%/%25/g' report.txt | awk 'BEGIN{ORS="%0A"} {print}')
+          echo "::error title=${{ matrix.variant }}-${{ matrix.rep }}::$msg"
