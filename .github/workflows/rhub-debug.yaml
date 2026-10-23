@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: r-hub/actions/setup@v1
       with:
-        config: nosuggests,intel
+        config: nosuggests
       id: rhub-setup
 
   linux-containers:
@@ -37,21 +37,8 @@ jobs:
       - uses: r-hub/actions/setup-deps@v1
         with:
           job-config: ${{ matrix.config.job-config }}
-      - name: Pre-check diagnostics
-        if: always()
-        shell: bash
-        run: |
-          {
-            echo "R: $(command -v R) $(R --version 2>&1 | head -1)"
-            echo "pandoc: $(command -v pandoc) $(pandoc --version 2>&1 | head -1)"
-            echo "CHECK_ARGS=$CHECK_ARGS BUILD_ARGS=$BUILD_ARGS"
-            env | grep -E '^_R_CHECK_(DEPENDS|FORCE|SUGGESTS)' || true
-            R -q -e 'for (p in c("rcmdcheck","knitr","rmarkdown","testthat","glmnet")) cat(p, tryCatch(as.character(packageVersion(p)), error = function(e) "MISSING"), "\n")' 2>&1
-            echo "--- R CMD build"
-            R CMD build --no-manual . 2>&1 | tail -40
-          } > diag.txt 2>&1 || true
       - uses: r-hub/actions/run-check@v1
-        timeout-minutes: 25
+        timeout-minutes: 15
         continue-on-error: true
         with:
           job-config: ${{ matrix.config.job-config }}
@@ -64,8 +51,9 @@ jobs:
             msg=$(tail -c "${3:-6000}" "$2" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN{ORS="%0A"} {print}')
             echo "::error title=$1::$msg"
           }
-          ann "diag" diag.txt 6000
-          ann "00check.log" "$(find check -name 00check.log | head -1)" 8000
-          ann "00install.out" "$(find check -name 00install.out | head -1)" 3000
-          for f in $(find check -name '*.Rout.fail' | head -3); do ann "$(basename $f)" "$f" 6000; done
-          ls -R check 2>/dev/null | head -60 > tree.txt; ann "check tree" tree.txt 3000
+          log=$(find check -name 00check.log -print -quit)
+          ann "00check.log" "$log" 8000
+          for f in $(find check -name '*.Rout*' -print); do ann "$(basename $f)" "$f" 5000; done
+          ann "vignette build" "$(find check -name 'vignettes*.log' -print -quit)" 4000
+          ls -R check > tree.txt 2>&1 || true; ann "check tree" tree.txt 3000
+          true
