@@ -91,8 +91,8 @@ Serial-correlation quantities agree to rounding error, and the selected AR
 order is identical in every data set. In about 1% of the Lasso data sets the
 degrees of freedom differ by one, because pyfgls 0.1.0 counts coefficients of
 order \(10^{-17}\) (left by interpolating its Lasso path at a knot) as selected.
-With the fixes proposed to pyfgls, everything agrees and the selected sets are
-identical:
+With the fixes merged into pyfgls after 0.1.0 (`emiliogcs/pyfgls#2`), everything
+agrees and the selected sets are identical:
 
 ```{r xl-dev}
 xl$pyfgls_pr2$version

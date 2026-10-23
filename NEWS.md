@@ -49,6 +49,6 @@ Elsewhere the R package deliberately differs:
   `kmax`. Without such columns the cap is the pyfgls one.
 * `serial = "ma1"` rejects `ar_order`, `kmax`, `lagged_dep_vars` and
   `vcov = "bootstrap"` instead of ignoring them.
-* Formula-interface behaviour with no pyfgls counterpart: `subset`, `na.action`
+* Formula-interface behavior with no pyfgls counterpart: `subset`, `na.action`
   (including `na.exclude` padding), row-numbered error messages, and checks of
   time-series row order and time indexes.

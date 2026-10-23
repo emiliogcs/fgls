@@ -18,10 +18,13 @@ python tools/make_golden.py --check    # compare a fresh regeneration with the c
 `.github/workflows/golden.yaml` runs `--check` weekly with the pinned and the latest
 pyfgls, then the R golden tests, and opens an issue on drift.
 
-Known pyfgls 0.1.0 issues (fixed in emiliogcs/pyfgls#2, not merged): its Lasso path
-(scikit-learn LARS) stops at penalties below float32 epsilon (~1.2e-7), and
-coefficients of order 1e-17 can count as selected. The golden CV curves are
-therefore compared for penalties of at least 1.2e-7.
+Known pyfgls 0.1.0 issues (fixed on pyfgls main by emiliogcs/pyfgls#2, not yet in a
+PyPI release): its Lasso path (scikit-learn LARS) stops at penalties below float32
+epsilon (~1.2e-7), and coefficients of order 1e-17 can count as selected. The golden
+CV curves are therefore compared for penalties of at least 1.2e-7. Once a pyfgls
+release contains the fixes, regenerate the fixtures with it (`make_golden.py`,
+updating `pyfgls_pin`) and remove the mask (`.lars_valid_lambda` in
+`tests/testthat/test-golden-hetero.R`).
 
 ## Distributional comparison (`compare_python_r.R`, `make_validation.py`)
 
