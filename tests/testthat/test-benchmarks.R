@@ -87,10 +87,15 @@ test_that("infeasible GLS with known rho or a known covariance matrix", {
   X <- cbind(1, sim$x)
   b <- stats::lm.fit(fgls:::ar_filter(X, 0.6), fgls:::ar_filter(sim$y, 0.6))$coefficients
   expect_equal(unname(coef(g)), unname(b), tolerance = 1e-10)
-  Om <- 0.6^abs(outer(1:300, 1:300, "-")) / (1 - 0.36)
-  go <- infeasible_gls(y ~ x, data = sim, omega = Om)
+  # A small T x T omega: with an OpenMP OpenBLAS and OMP_THREAD_LIMIT below the
+  # number of cores (as on some check machines) a multithreaded Cholesky
+  # factorization of a large matrix can deadlock.
+  s50 <- sim[1:50, ]
+  Om <- 0.6^abs(outer(1:50, 1:50, "-")) / (1 - 0.36)
+  go <- infeasible_gls(y ~ x, data = s50, omega = Om)
+  X50 <- cbind(1, s50$x)
   Oi <- solve(Om)
-  bo <- solve(t(X) %*% Oi %*% X, t(X) %*% Oi %*% sim$y)
+  bo <- solve(t(X50) %*% Oi %*% X50, t(X50) %*% Oi %*% s50$y)
   expect_equal(unname(coef(go)), drop(bo), tolerance = 1e-8)
   expect_error(infeasible_gls(y ~ x, data = sim), class = "fgls_error_input")
   expect_error(infeasible_gls(y ~ x, data = sim, rho = 0.5, omega = Om), class = "fgls_error_input")
