@@ -7,11 +7,11 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Conditions signaled by fgls — fgls-conditions"><meta name="description" content='All warnings raised by the package inherit from class "fgls_warning" and
 all errors from "fgls_error", so they can be caught or muffled as a group
-with tryCatch(), withCallingHandlers() or suppressWarnings() (R &amp;gt;= 4.3
-accepts a classes argument).'><meta property="og:description" content='All warnings raised by the package inherit from class "fgls_warning" and
+with tryCatch(), withCallingHandlers() or suppressWarnings() (whose
+classes argument, available since R 4.0.0, filters by class).'><meta property="og:description" content='All warnings raised by the package inherit from class "fgls_warning" and
 all errors from "fgls_error", so they can be caught or muffled as a group
-with tryCatch(), withCallingHandlers() or suppressWarnings() (R &amp;gt;= 4.3
-accepts a classes argument).'></head><body>
+with tryCatch(), withCallingHandlers() or suppressWarnings() (whose
+classes argument, available since R 4.0.0, filters by class).'></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -27,11 +27,11 @@ accepts a classes argument).'></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -60,8 +60,8 @@ accepts a classes argument).'></head><body>
     <div class="ref-description section level2">
     <p>All warnings raised by the package inherit from class <code>"fgls_warning"</code> and
 all errors from <code>"fgls_error"</code>, so they can be caught or muffled as a group
-with <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code>, <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers()</a></code> or <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings()</a></code> (R &gt;= 4.3
-accepts a <code>classes</code> argument).</p>
+with <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code>, <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers()</a></code> or <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings()</a></code> (whose
+<code>classes</code> argument, available since R 4.0.0, filters by class).</p>
     </div>
 
 
@@ -71,8 +71,14 @@ accepts a <code>classes</code> argument).</p>
 
 <ul><li><p><code>fgls_warning_nonstationary</code>: the estimated autoregressive filter has a
 root on, inside or close to the unit circle.</p></li>
-<li><p><code>fgls_warning_collinearity</code>: columns were dropped or a matrix was not
-positive definite.</p></li>
+<li><p><code>fgls_warning_collinearity</code>: a matrix that should be positive definite
+was not numerically so (for example a nearly singular cross-product of
+the regressors, or a covariance matrix with a negative eigenvalue), and a
+pseudo-inverse or eigenvalue clipping was used instead. Collinear lag
+columns dropped from the Durbin regression (lags of the intercept, of a
+trend or of seasonal dummies) do not signal it: they are recorded in
+<code>fit$serial$dropped_lags</code> and, for serial-only fits, in the notes of
+<code><a href="summary.fgls.html">summary.fgls()</a></code>.</p></li>
 <li><p><code>fgls_warning_convergence</code>: an iterative routine did not fully converge.</p></li>
 <li><p><code>fgls_warning_weight</code>: the estimated weights are extreme.</p></li>
 <li><p><code>fgls_warning_sample_size</code>: the sample is small relative to the number of

@@ -4,16 +4,23 @@ All warnings raised by the package inherit from class `"fgls_warning"`
 and all errors from `"fgls_error"`, so they can be caught or muffled as
 a group with [`tryCatch()`](https://rdrr.io/r/base/conditions.html),
 [`withCallingHandlers()`](https://rdrr.io/r/base/conditions.html) or
-[`suppressWarnings()`](https://rdrr.io/r/base/warning.html) (R \>= 4.3
-accepts a `classes` argument).
+[`suppressWarnings()`](https://rdrr.io/r/base/warning.html) (whose
+`classes` argument, available since R 4.0.0, filters by class).
 
 ## Warning classes
 
 - `fgls_warning_nonstationary`: the estimated autoregressive filter has
   a root on, inside or close to the unit circle.
 
-- `fgls_warning_collinearity`: columns were dropped or a matrix was not
-  positive definite.
+- `fgls_warning_collinearity`: a matrix that should be positive definite
+  was not numerically so (for example a nearly singular cross-product of
+  the regressors, or a covariance matrix with a negative eigenvalue),
+  and a pseudo-inverse or eigenvalue clipping was used instead.
+  Collinear lag columns dropped from the Durbin regression (lags of the
+  intercept, of a trend or of seasonal dummies) do not signal it: they
+  are recorded in `fit$serial$dropped_lags` and, for serial-only fits,
+  in the notes of
+  [`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md).
 
 - `fgls_warning_convergence`: an iterative routine did not fully
   converge.

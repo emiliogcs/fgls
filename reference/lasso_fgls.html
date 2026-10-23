@@ -31,11 +31,11 @@ misspecified.'></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -101,14 +101,18 @@ order (unless <code>serial = "none"</code>).</p></dd>
 
 
 <dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
-<dd><p>Optional expression selecting rows, evaluated in <code>data</code>.
-For time series only a contiguous block makes sense.</p></dd>
+<dd><p>Optional expression selecting rows, evaluated in <code>data</code>. For
+time series without a time index (<code>time</code>, or a ts/zoo <code>data</code>) the selected
+rows must be an increasing block of consecutive rows (e.g. <code>subset = 51:200</code>): repeated or reversed rows are an error, and so are skipped rows
+unless <code>allow_gaps = TRUE</code>.</p></dd>
 
 
 <dt id="arg-na-action">na.action<a class="anchor" aria-label="anchor" href="#arg-na-action"></a></dt>
 <dd><p><code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.fail()</a></code> (default) stops on missing values;
 <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.omit()</a></code> or <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.exclude()</a></code> drop them. For time series only
-leading and trailing missing values can be dropped.</p></dd>
+leading and trailing missing values can be dropped. With <code>na.exclude</code>,
+<code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> and <code><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted()</a></code> are padded with <code>NA</code> to the rows selected by
+<code>subset</code>, as for <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code>.</p></dd>
 
 
 <dt id="arg-hetero">hetero<a class="anchor" aria-label="anchor" href="#arg-hetero"></a></dt>
@@ -128,7 +132,9 @@ bootstrap).</p></dd>
 builds \(\{x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\}\) from every
 non-constant regressor (see <code><a href="make_dictionary.html">make_dictionary()</a></code>); a character vector of
 regressor names; a one-sided formula evaluated in <code>data</code> (e.g. <code>~ x + I(x^2) + w</code>); or a numeric matrix / data frame with one row per row of
-<code>data</code>.</p></dd>
+<code>data</code>. With <code>hetero = "wls_s1"</code> all candidates must be strictly positive,
+so give them explicitly, e.g. <code>z = "x"</code> or <code>z = ~ x + I(x^2)</code> for a
+positive regressor <code>x</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>

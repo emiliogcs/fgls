@@ -31,11 +31,11 @@ pre-determined.'></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -104,19 +104,24 @@ order (unless <code>serial = "none"</code>).</p></dd>
 
 
 <dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
-<dd><p>Optional expression selecting rows, evaluated in <code>data</code>.
-For time series only a contiguous block makes sense.</p></dd>
+<dd><p>Optional expression selecting rows, evaluated in <code>data</code>. For
+time series without a time index (<code>time</code>, or a ts/zoo <code>data</code>) the selected
+rows must be an increasing block of consecutive rows (e.g. <code>subset = 51:200</code>): repeated or reversed rows are an error, and so are skipped rows
+unless <code>allow_gaps = TRUE</code>.</p></dd>
 
 
 <dt id="arg-na-action">na.action<a class="anchor" aria-label="anchor" href="#arg-na-action"></a></dt>
 <dd><p><code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.fail()</a></code> (default) stops on missing values;
 <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.omit()</a></code> or <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.exclude()</a></code> drop them. For time series only
-leading and trailing missing values can be dropped.</p></dd>
+leading and trailing missing values can be dropped. With <code>na.exclude</code>,
+<code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> and <code><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted()</a></code> are padded with <code>NA</code> to the rows selected by
+<code>subset</code>, as for <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code>.</p></dd>
 
 
 <dt id="arg-serial">serial<a class="anchor" aria-label="anchor" href="#arg-serial"></a></dt>
 <dd><p><code>"auto"</code> (default), <code>"fixed"</code> or <code>"ma1"</code> (GMA estimator for
-MA(1) errors, PG26 Section 5).</p></dd>
+MA(1) errors, PG26 Section 5; its only variance is <code>vcov = "robust"</code>, the
+GMA covariance \(s^2 (X^{*\prime} X^*)^{-1}\)).</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
@@ -142,7 +147,7 @@ regression uses at most half of the sample as regressors.</p></dd>
 
 <dt id="arg-lagged-dep-vars">lagged_dep_vars<a class="anchor" aria-label="anchor" href="#arg-lagged-dep-vars"></a></dt>
 <dd><p>Names (or positions) of model-matrix columns that are
-lags of the dependent variable.</p></dd>
+lags of the dependent variable (not available with <code>serial = "ma1"</code>).</p></dd>
 
 
 <dt id="arg-exog">exog<a class="anchor" aria-label="anchor" href="#arg-exog"></a></dt>
@@ -152,7 +157,7 @@ lags of the dependent variable.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Further arguments passed to <code><a href="fgls.html">fgls()</a></code>, e.g. <code>kmax</code>, <code>ic</code>,
+<dd><p>Further arguments passed to <code><a href="fgls.html">fgls()</a></code>, e.g. <code>wallis_regressor</code>,
 <code>use_t</code>, <code>time</code>, <code>control</code>.</p></dd>
 
 </dl></div>

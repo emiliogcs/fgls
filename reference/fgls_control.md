@@ -1,9 +1,9 @@
 # Advanced options for fgls
 
 Tuning options of
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md) that most
-users never change. The defaults follow the papers and the Python
-package 'pyfgls'.
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md) that most users
+never change. The defaults follow the papers and the Python package
+'pyfgls'.
 
 ## Usage
 
@@ -103,7 +103,7 @@ fgls_control(
 - transforms:
 
   Transform families used by `z = "auto"`; see
-  [`make_dictionary()`](https://emiliogcs.github.io/fgls/reference/make_dictionary.md).
+  [`make_dictionary()`](https://emiliogcs.com/fgls/reference/make_dictionary.md).
 
 - svr_cost, svr_epsilon:
 
@@ -139,13 +139,13 @@ A list of class `"fgls_control"`.
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 ## Examples
 

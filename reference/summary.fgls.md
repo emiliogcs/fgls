@@ -60,13 +60,13 @@ argument invisibly.
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md)
 
 ## Examples
 

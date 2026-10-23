@@ -36,7 +36,10 @@ plot(x, which = 1:4, ask = FALSE, lag.max = 20L, ...)
 - ...:
 
   Further graphical arguments passed to
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html).
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) (or
+  [`stats::qqnorm()`](https://rdrr.io/r/stats/qqnorm.html) for panel 4).
+  `main`, `xlab` and `ylab` replace the default titles and axis labels
+  of every panel drawn.
 
 ## Value
 
@@ -45,13 +48,13 @@ plot(x, which = 1:4, ask = FALSE, lag.max = 20L, ...)
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 ## Examples
 

@@ -13,7 +13,15 @@ tidy(x, conf.int = FALSE, conf.level = 0.95, ...)
 glance(x, ...)
 
 # S3 method for class 'fgls'
-augment(x, data = NULL, newdata = NULL, ...)
+augment(
+  x,
+  data = NULL,
+  newdata = NULL,
+  se_fit = FALSE,
+  interval = c("none", "confidence"),
+  conf.level = 0.95,
+  ...
+)
 ```
 
 ## Arguments
@@ -36,18 +44,33 @@ augment(x, data = NULL, newdata = NULL, ...)
 
 - data:
 
-  Data to augment: by default the model frame.
+  Data to augment: by default the model frame. It must have one row per
+  observation used in the fit or, for a fit with
+  `na.action = na.exclude`, one row per row of the original data (the
+  excluded rows then get `NA`).
 
 - newdata:
 
-  Optional new data; only fitted values are added.
+  Optional new data; fitted values (and, if requested, standard errors
+  and confidence limits) are added, but no residuals.
+
+- se_fit:
+
+  Add the standard errors of the fitted means (`.se.fit`).
+
+- interval:
+
+  `"none"` or `"confidence"`: add confidence limits for the mean of the
+  response (`.lower`, `.upper`) at level `conf.level`.
 
 ## Value
 
 A data frame (a tibble if 'tibble' is installed): one row per
 coefficient for `tidy()`, one row for `glance()`, one row per
-observation for `augment()` (columns `.fitted`, `.resid`, `.innovation`
-and, with a heteroskedasticity correction, `.weight`).
+observation for `augment()` (columns `.fitted`, optionally `.lower`,
+`.upper` and `.se.fit`, then `.resid`, `.innovation` and, with a
+heteroskedasticity correction, `.weight`). `nonexogeneity.share` in
+`glance()` is `NA` when the share was not computed.
 
 ## Examples
 

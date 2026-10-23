@@ -13,7 +13,11 @@
 - `nonexogeneity_share()`: the relative size of the first-stage
   correction of PG26 eq. (29), averaged over coefficients. Values near
   zero mean the regressors behave as exogenous; large values mean the
-  naive variance (eq. 27) would understate the uncertainty.
+  naive variance (eq. 27) would understate the uncertainty. It is
+  computed from the robust variance whatever `vcov` the fit uses, and is
+  `NA` for the benchmark estimators (see
+  [`ols_robust()`](https://emiliogcs.com/fgls/reference/ols_robust.md))
+  and for `serial = "ma1"`, which do not compute it.
 
 ## Usage
 
@@ -34,13 +38,19 @@ nonexogeneity_share(fit)
 
 ## Value
 
-A named numeric vector, a complex vector, or a number.
+- `weight_diagnostics()`: a named numeric vector with elements
+  `variance_ratio`, `effective_n_share` and `top1pct_weight_share`.
+
+- `ar_roots()`: a complex vector with the \\k^\*\\ roots (empty when
+  \\k^\* = 0\\).
+
+- `nonexogeneity_share()`: a single number.
 
 ## See also
 
 Other diagnostics:
-[`adf_test()`](https://emiliogcs.github.io/fgls/reference/adf_test.md),
-[`test_predetermined()`](https://emiliogcs.github.io/fgls/reference/test_predetermined.md)
+[`adf_test()`](https://emiliogcs.com/fgls/reference/adf_test.md),
+[`test_predetermined()`](https://emiliogcs.com/fgls/reference/test_predetermined.md)
 
 ## Examples
 

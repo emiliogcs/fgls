@@ -110,15 +110,13 @@ fit_b
 #>      1.5934       0.8101
 ```
 
-See
-[`vignette("fgls-intro")`](https://emiliogcs.github.io/fgls/articles/fgls-intro.md)
-to get started, and the articles on [serial
-correlation](https://emiliogcs.github.io/fgls/articles/serial-correlation.html),
-[heteroskedasticity](https://emiliogcs.github.io/fgls/articles/heteroskedasticity.html),
+See [`vignette("fgls")`](https://emiliogcs.com/fgls/articles/fgls.md) to
+get started, and the articles on [serial
+correlation](https://emiliogcs.com/fgls/articles/serial-correlation.html),
+[heteroskedasticity](https://emiliogcs.com/fgls/articles/heteroskedasticity.html),
 the [combined
-estimator](https://emiliogcs.github.io/fgls/articles/combined.html) and
-the
-[validation](https://emiliogcs.github.io/fgls/articles/validation.html)
+estimator](https://emiliogcs.com/fgls/articles/combined.html) and the
+[validation](https://emiliogcs.com/fgls/articles/validation.html)
 against the papers and pyfgls.
 
 ## Citation

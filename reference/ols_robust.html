@@ -21,11 +21,11 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -144,14 +144,18 @@ order (unless <code>serial = "none"</code>).</p></dd>
 
 
 <dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
-<dd><p>Optional expression selecting rows, evaluated in <code>data</code>.
-For time series only a contiguous block makes sense.</p></dd>
+<dd><p>Optional expression selecting rows, evaluated in <code>data</code>. For
+time series without a time index (<code>time</code>, or a ts/zoo <code>data</code>) the selected
+rows must be an increasing block of consecutive rows (e.g. <code>subset = 51:200</code>): repeated or reversed rows are an error, and so are skipped rows
+unless <code>allow_gaps = TRUE</code>.</p></dd>
 
 
 <dt id="arg-na-action">na.action<a class="anchor" aria-label="anchor" href="#arg-na-action"></a></dt>
 <dd><p><code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.fail()</a></code> (default) stops on missing values;
 <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.omit()</a></code> or <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.exclude()</a></code> drop them. For time series only
-leading and trailing missing values can be dropped.</p></dd>
+leading and trailing missing values can be dropped. With <code>na.exclude</code>,
+<code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> and <code><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted()</a></code> are padded with <code>NA</code> to the rows selected by
+<code>subset</code>, as for <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code>.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
@@ -175,11 +179,14 @@ normal inference.</p></dd>
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
 <dd><p>Time index for data frames: the name of a <code>Date</code>, <code>POSIXct</code> or
 numeric column of <code>data</code>, or a vector with one value per row. It is used
-to check that rows are sorted and have no gaps.</p></dd>
+to check that rows are sorted and have no gaps, and must have no missing
+values in the sample. Convert character dates first, e.g. with
+<code><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date()</a></code> or <code><a href="https://rdrr.io/pkg/zoo/man/yearmon.html" class="external-link">zoo::as.yearmon()</a></code>.</p></dd>
 
 
 <dt id="arg-allow-gaps">allow_gaps<a class="anchor" aria-label="anchor" href="#arg-allow-gaps"></a></dt>
-<dd><p>Accept a time index with gaps (lags are then positional).</p></dd>
+<dd><p>Accept a time index with gaps, or a <code>subset</code> that skips
+rows (lags are then positional), with a warning.</p></dd>
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
@@ -210,21 +217,24 @@ regression uses at most half of the sample as regressors.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Level of the Breusch-Godfrey test (<code>hybrid_gls()</code>).</p></dd>
+<dd><p>Level of the Breusch-Godfrey test (<code>hybrid_gls()</code>), strictly
+between 0 and 1.</p></dd>
 
 
 <dt id="arg-lags">lags<a class="anchor" aria-label="anchor" href="#arg-lags"></a></dt>
-<dd><p>Number of lags of the Breusch-Godfrey test.</p></dd>
+<dd><p>Number of lags of the Breusch-Godfrey test, a positive integer.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional seed for the cross-validation folds and the bootstrap.
-The session's random number generator state is restored afterwards.</p></dd>
+<dd><p>Optional seed for the random AR(1) coefficient that
+<code>hybrid_gls()</code> draws when the Breusch-Godfrey test rejects. The session's
+random number generator state is restored afterwards.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>"fgls"</code> (see <code><a href="fgls.html">fgls()</a></code>).</p>
+    <p>An object of class <code>"fgls"</code> (see <code><a href="fgls.html">fgls()</a></code>). The non-exogeneity
+share of PG26 eq. (29) is not computed for these estimators and is <code>NA</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -238,8 +248,20 @@ quadratic-spectral kernel with automatic bandwidth, the benchmark of PG26;
 two-step version estimates the AR coefficients from OLS residuals and is
 <strong>not valid with non-exogenous regressors</strong> (PG26 Section 3); use
 <code><a href="serial_fgls.html">serial_fgls()</a></code> instead.</p></li>
-<li><p><code>durbin_estimator()</code>: the coefficients on the contemporaneous regressors
-of the Durbin regression (PG26 eq. 14), AR order by BIC unless given.</p></li>
+<li><p><code>durbin_estimator()</code>: the Durbin regression (PG26 eq. 14) of \(y_t\)
+on \(y_{t-j}\), \(x_t\) and \(x_{t-j}\), \(j = 1, \dots, k\),
+with the AR order \(k\) chosen by BIC unless given. The coefficients
+on the stochastic regressors are those on \(x_t\). Lags of the
+constant, of trends and of periodic dummies are collinear with the
+regressors and dropped, so the Durbin coefficients \(c\) on these
+regressors estimate \((I - \sum_j \rho_j P_j)\beta\), where the
+dropped lags are \(x_{t-j} = x_t P_j\) (plus kept lags). They are
+converted back to \(\hat\beta = (I - \sum_j \hat\rho_j
+  P_j)^{-1} c\), e.g. \(c / (1 - \sum_j \hat\rho_j)\) for the
+intercept, with a delta-method covariance, and are <code>NA</code> (with a note)
+when that is not possible. Residuals, fitted values and predictions use
+these coefficients; <code>innovations</code> are the residuals of the Durbin
+regression. (The Python package 'pyfgls' reports the untransformed \(c\).)</p></li>
 <li><p><code>infeasible_gls()</code>: GLS with known AR coefficients (<code>rho</code>) or a known
 error covariance matrix (<code>omega</code>, up to scale); a simulation benchmark.</p></li>
 <li><p><code>hybrid_gls()</code>: the hybrid OLS/GLS estimator of PG26 Supplement S-1
@@ -294,7 +316,7 @@ Econometric Methods</em>, 13(1), 29–48. <a href="https://doi.org/10.1515/jem-2
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept)            x  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      0.2782       0.9938  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      1.1858       0.9938  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu">infeasible_gls</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, data <span class="op">=</span> <span class="va">sim</span>, rho <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

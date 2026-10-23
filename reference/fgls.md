@@ -5,9 +5,8 @@ correcting for serially correlated errors (Perron and González-Coya,
 2026), for heteroskedasticity of unknown form (González-Coya and Perron,
 2024), or for both (the "F-CH" estimator of Supplement S-4 of the 2026
 paper).
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md)
-and
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md)
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md)
+and [`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md)
 are shortcuts for the two single corrections.
 
 ## Usage
@@ -65,7 +64,10 @@ fgls(
 - subset:
 
   Optional expression selecting rows, evaluated in `data`. For time
-  series only a contiguous block makes sense.
+  series without a time index (`time`, or a ts/zoo `data`) the selected
+  rows must be an increasing block of consecutive rows (e.g.
+  `subset = 51:200`): repeated or reversed rows are an error, and so are
+  skipped rows unless `allow_gaps = TRUE`.
 
 - na.action:
 
@@ -74,13 +76,17 @@ fgls(
   [`stats::na.omit()`](https://rdrr.io/r/stats/na.fail.html) or
   [`stats::na.exclude()`](https://rdrr.io/r/stats/na.fail.html) drop
   them. For time series only leading and trailing missing values can be
-  dropped.
+  dropped. With `na.exclude`,
+  [`residuals()`](https://rdrr.io/r/stats/residuals.html) and
+  [`fitted()`](https://rdrr.io/r/stats/fitted.values.html) are padded
+  with `NA` to the rows selected by `subset`, as for
+  [`stats::lm()`](https://rdrr.io/r/stats/lm.html).
 
 - serial:
 
   Serial-correlation correction: `"auto"` (AR order by BIC, default),
-  `"fixed"` (use `ar_order`), `"ma1"` (GMA for MA(1) errors) or
-  `"none"`.
+  `"fixed"` (use `ar_order`), `"ma1"` (GMA for MA(1) errors; it does not
+  take `ar_order`, `kmax` or `lagged_dep_vars`) or `"none"`.
 
 - hetero:
 
@@ -88,25 +94,42 @@ fgls(
   `"svr"` (support vector regression, requires 'e1071'),
   `"wls_s1"`/`"wls_s2"` (the parametric fits of Romano and Wolf, 2017,
   on \\\log z\\ or \\z\\), `"known"` (variances given in `variance`) or
-  `"none"`.
+  `"none"`. `"wls_s1"` takes logs, so it needs strictly positive
+  candidate covariates given explicitly in `z` (e.g. `z = "x"` for a
+  positive regressor `x`); the cosine terms of the default `z = "auto"`
+  are usually negative somewhere, which is an error.
 
 - vcov:
 
-  Variance estimator: `"robust"` (default; PG26 eq. 29, GP24 eqs. 6+8,
-  or Supplement A.4–A.5 depending on the corrections), `"naive"` (PG26
-  eq. 27; serial only), `"nonrobust"` (heteroskedasticity only),
-  `"HC0"`–`"HC3"`, or `"bootstrap"`. See
-  [`vcov.fgls()`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md).
+  Variance estimator; the default `"robust"` is PG26 eq. (29) with the
+  serial correction only, GP24 eqs. (6) and (8) with the
+  heteroskedasticity correction only, and Supplement eqs. (A.4)–(A.5)
+  with both. The types available depend on the corrections:
+
+  - serial only (`hetero = "none"`): `"robust"`, `"naive"` (PG26 eq. 27,
+    exogenous regressors only), `"HC0"`–`"HC3"` and `"bootstrap"` (sieve
+    bootstrap); with `serial = "ma1"` only `"robust"`;
+
+  - heteroskedasticity only (`serial = "none"`): `"robust"`,
+    `"nonrobust"`, `"HC0"`–`"HC3"` and `"bootstrap"` (wild bootstrap);
+
+  - both (the default): `"robust"`, `"HC0"`, `"HC3"` and `"bootstrap"`
+    (sieve bootstrap).
+
+  Any other choice is an error. See
+  [`vcov.fgls()`](https://emiliogcs.com/fgls/reference/fgls-methods.md).
 
 - z:
 
   Candidate covariates of the skedastic function: `"auto"` (default)
   builds \\\\x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\\\\ from every
   non-constant regressor (see
-  [`make_dictionary()`](https://emiliogcs.github.io/fgls/reference/make_dictionary.md));
+  [`make_dictionary()`](https://emiliogcs.com/fgls/reference/make_dictionary.md));
   a character vector of regressor names; a one-sided formula evaluated
   in `data` (e.g. `~ x + I(x^2) + w`); or a numeric matrix / data frame
-  with one row per row of `data`.
+  with one row per row of `data`. With `hetero = "wls_s1"` all
+  candidates must be strictly positive, so give them explicitly, e.g.
+  `z = "x"` or `z = ~ x + I(x^2)` for a positive regressor `x`.
 
 - ar_order:
 
@@ -126,7 +149,7 @@ fgls(
 - lagged_dep_vars:
 
   Names (or positions) of model-matrix columns that are lags of the
-  dependent variable.
+  dependent variable (not available with `serial = "ma1"`).
 
 - wallis_regressor:
 
@@ -147,7 +170,10 @@ fgls(
 - variance:
 
   Known error variances for `hetero = "known"`: a numeric vector with
-  one value per observation, or a function of the model matrix.
+  one value per row of `data`, whose values are selected by `subset` and
+  `na.action` together with the rows of the data (a vector with one
+  value per observation used is also accepted); or a function of the
+  model matrix returning one value per observation used.
 
 - delta:
 
@@ -187,11 +213,15 @@ fgls(
 
   Time index for data frames: the name of a `Date`, `POSIXct` or numeric
   column of `data`, or a vector with one value per row. It is used to
-  check that rows are sorted and have no gaps.
+  check that rows are sorted and have no gaps, and must have no missing
+  values in the sample. Convert character dates first, e.g. with
+  [`as.Date()`](https://rdrr.io/r/base/as.Date.html) or
+  [`zoo::as.yearmon()`](https://rdrr.io/pkg/zoo/man/yearmon.html).
 
 - allow_gaps:
 
-  Accept a time index with gaps (lags are then positional).
+  Accept a time index with gaps, or a `subset` that skips rows (lags are
+  then positional), with a warning.
 
 - check_stationarity:
 
@@ -201,7 +231,7 @@ fgls(
 - control:
 
   Advanced options, see
-  [`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md).
+  [`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md).
 
 - contrasts:
 
@@ -245,11 +275,19 @@ An object of class `"fgls"`, a list with components including
 
   Heteroskedasticity block: selected covariates, coefficients, \\\psi\\,
   \\\lambda\\, degrees of freedom, fitted variances; `weights` are
-  \\1/\hat v_t\\.
+  \\1/\hat v_t\\. For the Lasso, `skedastic$lambda` is the selected
+  penalty on the scale of 'glmnet', whose objective is that of GP24
+  eq. (4) divided by the number of observations \\n\\ of the skedastic
+  regression, and `skedastic$lambda_paper` \\= n \lambda\\ is the same
+  penalty on the scale of eq. (4). Both refer to the standardized
+  candidate covariates.
 
 - `stages`:
 
-  Intermediate estimators (`stages$serial` is F-C).
+  Intermediate estimators (`stages$serial` is F-C). They are `"fgls"`
+  objects with the same methods as the final fit;
+  `vcov(fit$stages$serial, type =)` accepts `"robust"`, `"HC0"` and
+  `"HC3"`.
 
 - `nobs`, `n_eff`:
 
@@ -263,7 +301,7 @@ Use the methods [`summary()`](https://rdrr.io/r/base/summary.html),
 [`predict()`](https://rdrr.io/r/stats/predict.html),
 [`residuals()`](https://rdrr.io/r/stats/residuals.html),
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md).
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md).
 
 ## Serial correlation (PG26)
 
@@ -308,10 +346,10 @@ in `fit$stages$serial`.
 
 - Time series with possibly autocorrelated errors and no concern about
   heteroskedasticity: `hetero = "none"` (or
-  [`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md)).
+  [`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md)).
 
 - Cross-sectional data: `serial = "none"` (or
-  [`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md)).
+  [`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md)).
   Rows can be in any order.
 
 - Lagged dependent variables among the regressors must be declared in
@@ -346,13 +384,13 @@ Romano, J. P. and Wolf, M. (2017). Resurrecting weighted least squares.
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 ## Examples
 

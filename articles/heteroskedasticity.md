@@ -45,7 +45,7 @@ summary(fit)
 #> Inference:              normal
 #> Skedastic fit:          lasso
 #> Selected z:             log(x)^2, cos(x), cos(2x)
-#> Lasso psi, lambda:      2, 0.01405
+#> Lasso psi, lambda:      2, 0.01405 (glmnet scale; 2.809 in GP24 eq. 4)
 #> df_hat:                 4
 #> Variance ratio max/min: 118
 #> 
@@ -80,7 +80,7 @@ plot(fit, which = 4)
 
 `z = "auto"` (the default) builds \\x, x^2, \log x, (\log x)^2, \cos x,
 \cos 2x\\ from every non-constant regressor
-([`make_dictionary()`](https://emiliogcs.github.io/fgls/reference/make_dictionary.md)),
+([`make_dictionary()`](https://emiliogcs.com/fgls/reference/make_dictionary.md)),
 which includes the specification of the paper’s simulations. Dummies are
 passed through untransformed. You can pass names of regressors, a
 one-sided formula, or a matrix, including covariates that are not
@@ -140,7 +140,7 @@ sapply(
 
 ## Weights and robustness options
 
-[`weight_diagnostics()`](https://emiliogcs.github.io/fgls/reference/weight_diagnostics.md)
+[`weight_diagnostics()`](https://emiliogcs.com/fgls/reference/weight_diagnostics.md)
 summarizes how concentrated the weights are; extreme weights trigger a
 warning. `weight_clip = c(0.01, 0.99)` winsorizes the fitted
 log-variances, and `fgls_control(delta_scale = TRUE)` makes the floor

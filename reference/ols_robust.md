@@ -1,7 +1,7 @@
 # Benchmark estimators
 
 Estimators used as comparisons in the papers and in
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md):
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md):
 
 ## Usage
 
@@ -94,7 +94,10 @@ hybrid_gls(
 - subset:
 
   Optional expression selecting rows, evaluated in `data`. For time
-  series only a contiguous block makes sense.
+  series without a time index (`time`, or a ts/zoo `data`) the selected
+  rows must be an increasing block of consecutive rows (e.g.
+  `subset = 51:200`): repeated or reversed rows are an error, and so are
+  skipped rows unless `allow_gaps = TRUE`.
 
 - na.action:
 
@@ -103,7 +106,11 @@ hybrid_gls(
   [`stats::na.omit()`](https://rdrr.io/r/stats/na.fail.html) or
   [`stats::na.exclude()`](https://rdrr.io/r/stats/na.fail.html) drop
   them. For time series only leading and trailing missing values can be
-  dropped.
+  dropped. With `na.exclude`,
+  [`residuals()`](https://rdrr.io/r/stats/residuals.html) and
+  [`fitted()`](https://rdrr.io/r/stats/fitted.values.html) are padded
+  with `NA` to the rows selected by `subset`, as for
+  [`stats::lm()`](https://rdrr.io/r/stats/lm.html).
 
 - vcov:
 
@@ -127,11 +134,15 @@ hybrid_gls(
 
   Time index for data frames: the name of a `Date`, `POSIXct` or numeric
   column of `data`, or a vector with one value per row. It is used to
-  check that rows are sorted and have no gaps.
+  check that rows are sorted and have no gaps, and must have no missing
+  values in the sample. Convert character dates first, e.g. with
+  [`as.Date()`](https://rdrr.io/r/base/as.Date.html) or
+  [`zoo::as.yearmon()`](https://rdrr.io/pkg/zoo/man/yearmon.html).
 
 - allow_gaps:
 
-  Accept a time index with gaps (lags are then positional).
+  Accept a time index with gaps, or a `subset` that skips rows (lags are
+  then positional), with a warning.
 
 - model:
 
@@ -162,21 +173,25 @@ hybrid_gls(
 
 - alpha:
 
-  Level of the Breusch-Godfrey test (`hybrid_gls()`).
+  Level of the Breusch-Godfrey test (`hybrid_gls()`), strictly between 0
+  and 1.
 
 - lags:
 
-  Number of lags of the Breusch-Godfrey test.
+  Number of lags of the Breusch-Godfrey test, a positive integer.
 
 - seed:
 
-  Optional seed for the cross-validation folds and the bootstrap. The
-  session's random number generator state is restored afterwards.
+  Optional seed for the random AR(1) coefficient that `hybrid_gls()`
+  draws when the Breusch-Godfrey test rejects. The session's random
+  number generator state is restored afterwards.
 
 ## Value
 
 An object of class `"fgls"` (see
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md)).
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md)). The
+non-exogeneity share of PG26 eq. (29) is not computed for these
+estimators and is `NA`.
 
 ## Details
 
@@ -190,12 +205,23 @@ An object of class `"fgls"` (see
 - `cochrane_orcutt()`: two-step (or iterated) Cochrane-Orcutt FGLS. The
   two-step version estimates the AR coefficients from OLS residuals and
   is **not valid with non-exogenous regressors** (PG26 Section 3); use
-  [`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md)
+  [`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md)
   instead.
 
-- `durbin_estimator()`: the coefficients on the contemporaneous
-  regressors of the Durbin regression (PG26 eq. 14), AR order by BIC
-  unless given.
+- `durbin_estimator()`: the Durbin regression (PG26 eq. 14) of \\y_t\\
+  on \\y\_{t-j}\\, \\x_t\\ and \\x\_{t-j}\\, \\j = 1, \dots, k\\, with
+  the AR order \\k\\ chosen by BIC unless given. The coefficients on the
+  stochastic regressors are those on \\x_t\\. Lags of the constant, of
+  trends and of periodic dummies are collinear with the regressors and
+  dropped, so the Durbin coefficients \\c\\ on these regressors estimate
+  \\(I - \sum_j \rho_j P_j)\beta\\, where the dropped lags are
+  \\x\_{t-j} = x_t P_j\\ (plus kept lags). They are converted back to
+  \\\hat\beta = (I - \sum_j \hat\rho_j P_j)^{-1} c\\, e.g. \\c / (1 -
+  \sum_j \hat\rho_j)\\ for the intercept, with a delta-method
+  covariance, and are `NA` (with a note) when that is not possible.
+  Residuals, fitted values and predictions use these coefficients;
+  `innovations` are the residuals of the Durbin regression. (The Python
+  package 'pyfgls' reports the untransformed \\c\\.)
 
 - `infeasible_gls()`: GLS with known AR coefficients (`rho`) or a known
   error covariance matrix (`omega`, up to scale); a simulation
@@ -256,7 +282,7 @@ durbin_estimator(y ~ x, data = sim)
 #> 
 #> Coefficients:
 #> (Intercept)            x  
-#>      0.2782       0.9938  
+#>      1.1858       0.9938  
 #> 
 infeasible_gls(y ~ x, data = sim, rho = 0.8)
 #> 

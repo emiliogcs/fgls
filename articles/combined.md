@@ -38,7 +38,7 @@ summary(fit)
 #> Non-exogeneity share:   0.011
 #> Skedastic fit:          lasso
 #> Selected z:             log(x), log(x)^2
-#> Lasso psi, lambda:      2, 0.06188
+#> Lasso psi, lambda:      2, 0.06188 (glmnet scale; 12.25 in GP24 eq. 4)
 #> df_hat:                 3
 #> Variance ratio max/min: 42.7
 #> 
@@ -62,8 +62,8 @@ compare_fgls(OLS = lm(y ~ x, data = sim), `F-C` = fit$stages$serial, `F-CH` = fi
 #> 6           x  ci.width  3.3934163  0.7882582  0.4056387
 ```
 
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md) is the
-general function; this combined estimator is its default.
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md) is the general
+function; this combined estimator is its default.
 
 ## The first-stage correction
 
@@ -73,9 +73,16 @@ filter that eq. (29) of the paper provides in the serial-only case.
 default when the regressors are declared pre-determined
 (`first_stage_correction = TRUE`, the default for
 `exog = "predetermined"`). With exogenous regressors it is negligible.
-With non-exogenous ones, simulations show that it is needed for correct
-coverage
-([`vignette("validation")`](https://emiliogcs.github.io/fgls/articles/validation.md)).
+With non-exogenous ones it is needed for correct coverage. The package’s
+slow Monte Carlo acceptance tests
+(`tests/testthat/test-statistical-s4.R` in the source package, run with
+`FGLS_SLOW_TESTS=true`) check this with AR(1) errors with coefficient
+0.8, \\v(x) = x^2\\, a regressor that responds to past innovations
+(\\\gamma = 0.5\\ and 1) and \\T = 200\\: the corrected 95% interval
+must cover between 91% and 97% of the time, and at least three
+percentage points more often than the uncorrected one. The replication
+notes of pyfgls report coverage of 0.923 with the correction and 0.860
+without it for \\\gamma = 1\\ (1,000 replications).
 
 ``` r
 
@@ -89,18 +96,25 @@ c(with = sqrt(vcov(with_fs)[2, 2]), without = sqrt(vcov(without_fs)[2, 2]))
 
 ## No loss under homoskedasticity
 
-When the innovations are homoskedastic the Lasso typically selects
-nothing and F-CH equals F-C:
+When the innovations are homoskedastic the Lasso often selects nothing,
+and F-CH then equals F-C, as in this example:
 
 ``` r
 
-hom <- simulate_combined(200, ar = 0.5, skedastic = "homoskedastic", seed = 7)
+hom <- simulate_combined(200, ar = 0.5, skedastic = "homoskedastic", seed = 4)
 fit_h <- fgls(y ~ x, data = hom, seed = 1)
 fit_h$skedastic$selected
-#> [1] "x"        "log(x)"   "log(x)^2" "cos(x)"   "cos(2x)"
+#> character(0)
 all.equal(coef(fit_h), coef(fit_h$stages$serial))
-#> [1] "Mean relative difference: 0.03160067"
+#> [1] TRUE
 ```
+
+In other samples it selects a few covariates by chance, and F-CH then
+differs somewhat from F-C. On average nothing is lost: in the
+homoskedastic row of Table S.9
+([`vignette("validation")`](https://emiliogcs.com/fgls/articles/validation.md))
+the two have essentially the same mean squared error and both cover
+close to 95%.
 
 ## Bootstrap cross-check
 

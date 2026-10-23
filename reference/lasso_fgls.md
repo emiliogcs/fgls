@@ -1,13 +1,12 @@
 # Feasible GLS under heteroskedasticity of unknown form (González-Coya and Perron, 2024)
 
-Shortcut for
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md) with
-`serial = "none"`. The log of the squared OLS residuals is regressed on
-candidate covariates `z` by an adaptive Lasso tuned by cross-validation;
-the exponentiated fit gives the weights of a weighted least-squares
-regression. Inference uses the sandwich of eq. (6) with the bias
-correction of eq. (8), so it remains valid when the skedastic model is
-misspecified.
+Shortcut for [`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md)
+with `serial = "none"`. The log of the squared OLS residuals is
+regressed on candidate covariates `z` by an adaptive Lasso tuned by
+cross-validation; the exponentiated fit gives the weights of a weighted
+least-squares regression. Inference uses the sandwich of eq. (6) with
+the bias correction of eq. (8), so it remains valid when the skedastic
+model is misspecified.
 
 ## Usage
 
@@ -42,7 +41,10 @@ lasso_fgls(
 - subset:
 
   Optional expression selecting rows, evaluated in `data`. For time
-  series only a contiguous block makes sense.
+  series without a time index (`time`, or a ts/zoo `data`) the selected
+  rows must be an increasing block of consecutive rows (e.g.
+  `subset = 51:200`): repeated or reversed rows are an error, and so are
+  skipped rows unless `allow_gaps = TRUE`.
 
 - na.action:
 
@@ -51,7 +53,11 @@ lasso_fgls(
   [`stats::na.omit()`](https://rdrr.io/r/stats/na.fail.html) or
   [`stats::na.exclude()`](https://rdrr.io/r/stats/na.fail.html) drop
   them. For time series only leading and trailing missing values can be
-  dropped.
+  dropped. With `na.exclude`,
+  [`residuals()`](https://rdrr.io/r/stats/residuals.html) and
+  [`fitted()`](https://rdrr.io/r/stats/fitted.values.html) are padded
+  with `NA` to the rows selected by `subset`, as for
+  [`stats::lm()`](https://rdrr.io/r/stats/lm.html).
 
 - hetero:
 
@@ -70,10 +76,12 @@ lasso_fgls(
   Candidate covariates of the skedastic function: `"auto"` (default)
   builds \\\\x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\\\\ from every
   non-constant regressor (see
-  [`make_dictionary()`](https://emiliogcs.github.io/fgls/reference/make_dictionary.md));
+  [`make_dictionary()`](https://emiliogcs.com/fgls/reference/make_dictionary.md));
   a character vector of regressor names; a one-sided formula evaluated
   in `data` (e.g. `~ x + I(x^2) + w`); or a numeric matrix / data frame
-  with one row per row of `data`.
+  with one row per row of `data`. With `hetero = "wls_s1"` all
+  candidates must be strictly positive, so give them explicitly, e.g.
+  `z = "x"` or `z = ~ x + I(x^2)` for a positive regressor `x`.
 
 - seed:
 
@@ -83,14 +91,14 @@ lasso_fgls(
 - ...:
 
   Further arguments passed to
-  [`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md), e.g.
+  [`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md), e.g.
   `variance`, `cv_folds`, `lambda_rule`, `weight_clip`, `use_t`,
   `control`.
 
 ## Value
 
 An object of class `"fgls"`; see
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md).
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md).
 
 ## References
 
@@ -110,16 +118,16 @@ Romano, J. P. and Wolf, M. (2017). Resurrecting weighted least squares.
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 Other heteroskedasticity:
-[`make_dictionary()`](https://emiliogcs.github.io/fgls/reference/make_dictionary.md)
+[`make_dictionary()`](https://emiliogcs.com/fgls/reference/make_dictionary.md)
 
 ## Examples
 

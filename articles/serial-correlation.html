@@ -35,12 +35,12 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -214,7 +214,12 @@ variables:</p>
 <span><span class="co">#&gt;      rho1 </span></span>
 <span><span class="co">#&gt; 0.4586741</span></span></code></pre></div>
 <p>Without the declaration, <code><a href="../reference/fgls.html">fgls()</a></code> warns that a regressor
-looks like a lagged dependent variable.</p>
+looks like a lagged dependent variable. Once the selected AR order
+reaches the lag in question, the lagged <span class="math inline">\(y\)</span> of the Durbin regression is collinear
+with that regressor, and the fit stops with an error asking for
+<code>lagged_dep_vars</code>; with the data above,
+<code>serial_fgls(y ~ ylag + w, data = dyn)</code> fails in this
+way.</p>
 </div>
 <div class="section level2">
 <h2 id="ma1-errors">MA(1) errors<a class="anchor" aria-label="anchor" href="#ma1-errors"></a>

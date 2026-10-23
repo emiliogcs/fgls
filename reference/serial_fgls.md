@@ -1,12 +1,12 @@
 # Feasible GLS for serially correlated errors (Perron and González-Coya, 2026)
 
-Shortcut for
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md) with
-`hetero = "none"`: the errors are approximated by an AR(k) process whose
-coefficients come from the Durbin regression and whose order is chosen
-by BIC (eq. 14), the data are quasi-differenced and OLS is applied (eq.
-15). The default variance is the exogeneity-robust estimator of eqs.
-(28)–(29), valid when the regressors are only pre-determined.
+Shortcut for [`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md)
+with `hetero = "none"`: the errors are approximated by an AR(k) process
+whose coefficients come from the Durbin regression and whose order is
+chosen by BIC (eq. 14), the data are quasi-differenced and OLS is
+applied (eq. 15). The default variance is the exogeneity-robust
+estimator of eqs. (28)–(29), valid when the regressors are only
+pre-determined.
 
 ## Usage
 
@@ -44,7 +44,10 @@ serial_fgls(
 - subset:
 
   Optional expression selecting rows, evaluated in `data`. For time
-  series only a contiguous block makes sense.
+  series without a time index (`time`, or a ts/zoo `data`) the selected
+  rows must be an increasing block of consecutive rows (e.g.
+  `subset = 51:200`): repeated or reversed rows are an error, and so are
+  skipped rows unless `allow_gaps = TRUE`.
 
 - na.action:
 
@@ -53,12 +56,17 @@ serial_fgls(
   [`stats::na.omit()`](https://rdrr.io/r/stats/na.fail.html) or
   [`stats::na.exclude()`](https://rdrr.io/r/stats/na.fail.html) drop
   them. For time series only leading and trailing missing values can be
-  dropped.
+  dropped. With `na.exclude`,
+  [`residuals()`](https://rdrr.io/r/stats/residuals.html) and
+  [`fitted()`](https://rdrr.io/r/stats/fitted.values.html) are padded
+  with `NA` to the rows selected by `subset`, as for
+  [`stats::lm()`](https://rdrr.io/r/stats/lm.html).
 
 - serial:
 
   `"auto"` (default), `"fixed"` or `"ma1"` (GMA estimator for MA(1)
-  errors, PG26 Section 5).
+  errors, PG26 Section 5; its only variance is `vcov = "robust"`, the
+  GMA covariance \\s^2 (X^{\*\prime} X^\*)^{-1}\\).
 
 - vcov:
 
@@ -84,7 +92,7 @@ serial_fgls(
 - lagged_dep_vars:
 
   Names (or positions) of model-matrix columns that are lags of the
-  dependent variable.
+  dependent variable (not available with `serial = "ma1"`).
 
 - exog:
 
@@ -95,13 +103,13 @@ serial_fgls(
 - ...:
 
   Further arguments passed to
-  [`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md), e.g.
-  `kmax`, `ic`, `use_t`, `time`, `control`.
+  [`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md), e.g.
+  `wallis_regressor`, `use_t`, `time`, `control`.
 
 ## Value
 
 An object of class `"fgls"`; see
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md).
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md).
 
 ## References
 
@@ -121,13 +129,13 @@ Romano, J. P. and Wolf, M. (2017). Resurrecting weighted least squares.
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 ## Examples
 

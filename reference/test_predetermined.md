@@ -43,8 +43,7 @@ print(x, ...)
 - data:
 
   A data frame, a list, a `ts`/`mts` object, or a 'zoo'/'xts' object
-  containing the variables in the formula. Rows must be in time order
-  (unless `serial = "none"`).
+  containing the variables in the formula. Rows must be in time order.
 
 - max_lag:
 
@@ -52,7 +51,8 @@ print(x, ...)
 
 - ar_order:
 
-  Fixed AR order (implies `serial = "fixed"`).
+  Fixed AR order of the Durbin regression; `NULL` (default) selects it
+  by BIC up to `kmax`.
 
 - kmax:
 
@@ -81,17 +81,25 @@ print(x, ...)
   [`stats::na.omit()`](https://rdrr.io/r/stats/na.fail.html) or
   [`stats::na.exclude()`](https://rdrr.io/r/stats/na.fail.html) drop
   them. For time series only leading and trailing missing values can be
-  dropped.
+  dropped. With `na.exclude`,
+  [`residuals()`](https://rdrr.io/r/stats/residuals.html) and
+  [`fitted()`](https://rdrr.io/r/stats/fitted.values.html) are padded
+  with `NA` to the rows selected by `subset`, as for
+  [`stats::lm()`](https://rdrr.io/r/stats/lm.html).
 
 - time:
 
   Time index for data frames: the name of a `Date`, `POSIXct` or numeric
   column of `data`, or a vector with one value per row. It is used to
-  check that rows are sorted and have no gaps.
+  check that rows are sorted and have no gaps, and must have no missing
+  values in the sample. Convert character dates first, e.g. with
+  [`as.Date()`](https://rdrr.io/r/base/as.Date.html) or
+  [`zoo::as.yearmon()`](https://rdrr.io/pkg/zoo/man/yearmon.html).
 
 - allow_gaps:
 
-  Accept a time index with gaps (lags are then positional).
+  Accept a time index with gaps, or a `subset` that skips rows (lags are
+  then positional), with a warning.
 
 - x:
 
@@ -103,9 +111,24 @@ print(x, ...)
 
 ## Value
 
-An object of class `"fgls_predetermined"`: a list with `table` (a data
-frame with columns `lags`, `LM`, `df`, `p.value`), `ar_order`,
-`regressors`, `alpha`, `rejected` and `advice`.
+An object of class `"fgls_predetermined"`: a list with
+
+- `table`: a data frame with columns `lags`, `LM`, `df` and `p.value`,
+  one row per number of added lags;
+
+- `ar_order`: the AR order of the Durbin regression;
+
+- `regressors`: the names of the regressors whose lags were tested;
+
+- `alpha`: the level used for the advice;
+
+- `rejected`: `TRUE` if some test rejects at level `alpha`;
+
+- `advice`: a sentence summarizing the result;
+
+- `scale`: the `scale` used, `"innovations"` or `"errors"`.
+
+The print method returns `x` invisibly.
 
 ## Details
 
@@ -134,8 +157,8 @@ Romano, J. P. and Wolf, M. (2017). Resurrecting weighted least squares.
 ## See also
 
 Other diagnostics:
-[`adf_test()`](https://emiliogcs.github.io/fgls/reference/adf_test.md),
-[`weight_diagnostics()`](https://emiliogcs.github.io/fgls/reference/weight_diagnostics.md)
+[`adf_test()`](https://emiliogcs.com/fgls/reference/adf_test.md),
+[`weight_diagnostics()`](https://emiliogcs.com/fgls/reference/weight_diagnostics.md)
 
 ## Examples
 

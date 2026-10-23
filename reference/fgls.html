@@ -31,11 +31,11 @@ corrections.'></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -123,20 +123,24 @@ order (unless <code>serial = "none"</code>).</p></dd>
 
 
 <dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
-<dd><p>Optional expression selecting rows, evaluated in <code>data</code>.
-For time series only a contiguous block makes sense.</p></dd>
+<dd><p>Optional expression selecting rows, evaluated in <code>data</code>. For
+time series without a time index (<code>time</code>, or a ts/zoo <code>data</code>) the selected
+rows must be an increasing block of consecutive rows (e.g. <code>subset = 51:200</code>): repeated or reversed rows are an error, and so are skipped rows
+unless <code>allow_gaps = TRUE</code>.</p></dd>
 
 
 <dt id="arg-na-action">na.action<a class="anchor" aria-label="anchor" href="#arg-na-action"></a></dt>
 <dd><p><code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.fail()</a></code> (default) stops on missing values;
 <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.omit()</a></code> or <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.exclude()</a></code> drop them. For time series only
-leading and trailing missing values can be dropped.</p></dd>
+leading and trailing missing values can be dropped. With <code>na.exclude</code>,
+<code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> and <code><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted()</a></code> are padded with <code>NA</code> to the rows selected by
+<code>subset</code>, as for <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code>.</p></dd>
 
 
 <dt id="arg-serial">serial<a class="anchor" aria-label="anchor" href="#arg-serial"></a></dt>
 <dd><p>Serial-correlation correction: <code>"auto"</code> (AR order by BIC,
-default), <code>"fixed"</code> (use <code>ar_order</code>), <code>"ma1"</code> (GMA for MA(1) errors) or
-<code>"none"</code>.</p></dd>
+default), <code>"fixed"</code> (use <code>ar_order</code>), <code>"ma1"</code> (GMA for MA(1) errors; it
+does not take <code>ar_order</code>, <code>kmax</code> or <code>lagged_dep_vars</code>) or <code>"none"</code>.</p></dd>
 
 
 <dt id="arg-hetero">hetero<a class="anchor" aria-label="anchor" href="#arg-hetero"></a></dt>
@@ -144,14 +148,24 @@ default), <code>"fixed"</code> (use <code>ar_order</code>), <code>"ma1"</code> (
 default), <code>"svr"</code> (support vector regression, requires 'e1071'),
 <code>"wls_s1"</code>/<code>"wls_s2"</code> (the parametric fits of Romano and Wolf, 2017, on
 \(\log z\) or \(z\)), <code>"known"</code> (variances given in <code>variance</code>) or
-<code>"none"</code>.</p></dd>
+<code>"none"</code>. <code>"wls_s1"</code> takes logs, so it needs strictly positive candidate
+covariates given explicitly in <code>z</code> (e.g. <code>z = "x"</code> for a positive
+regressor <code>x</code>); the cosine terms of the default <code>z = "auto"</code> are usually
+negative somewhere, which is an error.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
-<dd><p>Variance estimator: <code>"robust"</code> (default; PG26 eq. 29, GP24
-eqs. 6+8, or Supplement A.4–A.5 depending on the corrections), <code>"naive"</code>
-(PG26 eq. 27; serial only), <code>"nonrobust"</code> (heteroskedasticity only),
-<code>"HC0"</code>–<code>"HC3"</code>, or <code>"bootstrap"</code>. See <code><a href="fgls-methods.html">vcov.fgls()</a></code>.</p></dd>
+<dd><p>Variance estimator; the default <code>"robust"</code> is PG26 eq. (29) with
+the serial correction only, GP24 eqs. (6) and (8) with the
+heteroskedasticity correction only, and Supplement eqs. (A.4)–(A.5) with
+both. The types available depend on the corrections:</p><ul><li><p>serial only (<code>hetero = "none"</code>): <code>"robust"</code>, <code>"naive"</code> (PG26 eq. 27,
+exogenous regressors only), <code>"HC0"</code>–<code>"HC3"</code> and <code>"bootstrap"</code> (sieve
+bootstrap); with <code>serial = "ma1"</code> only <code>"robust"</code>;</p></li>
+<li><p>heteroskedasticity only (<code>serial = "none"</code>): <code>"robust"</code>, <code>"nonrobust"</code>,
+<code>"HC0"</code>–<code>"HC3"</code> and <code>"bootstrap"</code> (wild bootstrap);</p></li>
+<li><p>both (the default): <code>"robust"</code>, <code>"HC0"</code>, <code>"HC3"</code> and <code>"bootstrap"</code>
+(sieve bootstrap).</p></li>
+</ul><p>Any other choice is an error. See <code><a href="fgls-methods.html">vcov.fgls()</a></code>.</p></dd>
 
 
 <dt id="arg-z">z<a class="anchor" aria-label="anchor" href="#arg-z"></a></dt>
@@ -159,7 +173,9 @@ eqs. 6+8, or Supplement A.4–A.5 depending on the corrections), <code>"naive"</
 builds \(\{x, x^2, \log x, (\log x)^2, \cos x, \cos 2x\}\) from every
 non-constant regressor (see <code><a href="make_dictionary.html">make_dictionary()</a></code>); a character vector of
 regressor names; a one-sided formula evaluated in <code>data</code> (e.g. <code>~ x + I(x^2) + w</code>); or a numeric matrix / data frame with one row per row of
-<code>data</code>.</p></dd>
+<code>data</code>. With <code>hetero = "wls_s1"</code> all candidates must be strictly positive,
+so give them explicitly, e.g. <code>z = "x"</code> or <code>z = ~ x + I(x^2)</code> for a
+positive regressor <code>x</code>.</p></dd>
 
 
 <dt id="arg-ar-order">ar_order<a class="anchor" aria-label="anchor" href="#arg-ar-order"></a></dt>
@@ -179,7 +195,7 @@ regression uses at most half of the sample as regressors.</p></dd>
 
 <dt id="arg-lagged-dep-vars">lagged_dep_vars<a class="anchor" aria-label="anchor" href="#arg-lagged-dep-vars"></a></dt>
 <dd><p>Names (or positions) of model-matrix columns that are
-lags of the dependent variable.</p></dd>
+lags of the dependent variable (not available with <code>serial = "ma1"</code>).</p></dd>
 
 
 <dt id="arg-wallis-regressor">wallis_regressor<a class="anchor" aria-label="anchor" href="#arg-wallis-regressor"></a></dt>
@@ -201,7 +217,10 @@ eq. (29) to the variance of the combined estimator. Default <code>TRUE</code> wh
 
 <dt id="arg-variance">variance<a class="anchor" aria-label="anchor" href="#arg-variance"></a></dt>
 <dd><p>Known error variances for <code>hetero = "known"</code>: a numeric
-vector with one value per observation, or a function of the model matrix.</p></dd>
+vector with one value per row of <code>data</code>, whose values are selected by
+<code>subset</code> and <code>na.action</code> together with the rows of the data (a vector with
+one value per observation used is also accepted); or a function of the
+model matrix returning one value per observation used.</p></dd>
 
 
 <dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
@@ -242,11 +261,14 @@ normal inference.</p></dd>
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
 <dd><p>Time index for data frames: the name of a <code>Date</code>, <code>POSIXct</code> or
 numeric column of <code>data</code>, or a vector with one value per row. It is used
-to check that rows are sorted and have no gaps.</p></dd>
+to check that rows are sorted and have no gaps, and must have no missing
+values in the sample. Convert character dates first, e.g. with
+<code><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date()</a></code> or <code><a href="https://rdrr.io/pkg/zoo/man/yearmon.html" class="external-link">zoo::as.yearmon()</a></code>.</p></dd>
 
 
 <dt id="arg-allow-gaps">allow_gaps<a class="anchor" aria-label="anchor" href="#arg-allow-gaps"></a></dt>
-<dd><p>Accept a time index with gaps (lags are then positional).</p></dd>
+<dd><p>Accept a time index with gaps, or a <code>subset</code> that skips
+rows (lags are then positional), with a warning.</p></dd>
 
 
 <dt id="arg-check-stationarity">check_stationarity<a class="anchor" aria-label="anchor" href="#arg-check-stationarity"></a></dt>
@@ -295,10 +317,18 @@ regression.</p></dd>
 <dt><code>skedastic</code>, <code>weights</code></dt>
 <dd><p>Heteroskedasticity block: selected
 covariates, coefficients, \(\psi\), \(\lambda\), degrees of freedom,
-fitted variances; <code>weights</code> are \(1/\hat v_t\).</p></dd>
+fitted variances; <code>weights</code> are \(1/\hat v_t\). For the Lasso,
+<code>skedastic$lambda</code> is the selected penalty on the scale of 'glmnet',
+whose objective is that of GP24 eq. (4) divided by the number of
+observations \(n\) of the skedastic regression, and
+<code>skedastic$lambda_paper</code> \(= n \lambda\) is the same penalty on the
+scale of eq. (4). Both refer to the standardized candidate covariates.</p></dd>
 
 <dt><code>stages</code></dt>
-<dd><p>Intermediate estimators (<code>stages$serial</code> is F-C).</p></dd>
+<dd><p>Intermediate estimators (<code>stages$serial</code> is F-C). They
+are <code>"fgls"</code> objects with the same methods as the final fit;
+<code>vcov(fit$stages$serial, type =)</code> accepts <code>"robust"</code>, <code>"HC0"</code> and
+<code>"HC3"</code>.</p></dd>
 
 <dt><code>nobs</code>, <code>n_eff</code></dt>
 <dd><p>Number of observations and of observations in the

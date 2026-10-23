@@ -22,7 +22,7 @@ Useful links:
 
 - <https://github.com/emiliogcs/fgls>
 
-- <https://emiliogcs.github.io/fgls/>
+- <https://emiliogcs.com/fgls/>
 
 - Report bugs at <https://github.com/emiliogcs/fgls/issues>
 

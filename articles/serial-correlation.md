@@ -61,7 +61,7 @@ sapply(fits, function(f) coef(f)[["x"]])
 The true slope is 1. In the paper’s Monte Carlo (10,000 replications)
 OLS has a bias of about 0.40, Cochrane-Orcutt about 0.03, and FGLS is as
 precise as the infeasible GLS;
-[`vignette("validation")`](https://emiliogcs.github.io/fgls/articles/validation.md)
+[`vignette("validation")`](https://emiliogcs.com/fgls/articles/validation.md)
 reproduces these numbers with this package.
 
 ## Variance and inference
@@ -145,8 +145,12 @@ fit_dyn$rho
 ```
 
 Without the declaration,
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md) warns
-that a regressor looks like a lagged dependent variable.
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md) warns that a
+regressor looks like a lagged dependent variable. Once the selected AR
+order reaches the lag in question, the lagged \\y\\ of the Durbin
+regression is collinear with that regressor, and the fit stops with an
+error asking for `lagged_dep_vars`; with the data above,
+`serial_fgls(y ~ ylag + w, data = dyn)` fails in this way.
 
 ## MA(1) errors
 
@@ -171,7 +175,7 @@ serial_fgls(y ~ x, data = pred, serial = "ma1")
 
 ## Checking pre-determinedness
 
-[`test_predetermined()`](https://emiliogcs.github.io/fgls/reference/test_predetermined.md)
+[`test_predetermined()`](https://emiliogcs.com/fgls/reference/test_predetermined.md)
 (experimental) is a variable-addition LM test for missing lags of the
 regressors (Remark 9 of the paper). A rejection suggests adding lags of
 the regressors to the model:

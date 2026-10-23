@@ -25,11 +25,11 @@ generic tools such as lmtest::coeftest() and lmtest::coefci()."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -82,6 +82,7 @@ generic tools such as <code><a href="https://rdrr.io/pkg/lmtest/man/coeftest.htm
 <span>  se.fit <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  interval <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"confidence"</span><span class="op">)</span>,</span>
 <span>  level <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"response"</span>,</span>
 <span>  na.action <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.pass</a></span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
@@ -120,9 +121,11 @@ generic tools such as <code><a href="https://rdrr.io/pkg/lmtest/man/coeftest.htm
 <dd><p>For <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>: <code>NULL</code> (the variance chosen when
 fitting) or another variance type to compute from the stored estimates:
 <code>"robust"</code>, <code>"naive"</code>, <code>"nonrobust"</code>, <code>"HC0"</code>–<code>"HC3"</code> (where
-available) or <code>"bootstrap"</code> (re-runs the estimator). For <code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code>:
-<code>"response"</code> (\(y_t - x_t'\hat\beta\), full sample) or <code>"innovations"</code>
-(residuals of the final filtered and/or weighted regression).</p></dd>
+available) or <code>"bootstrap"</code> (re-runs the estimator); see the section
+<em>Variance types</em>. For <code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code>: <code>"response"</code>
+(\(y_t - x_t'\hat\beta\), full sample) or <code>"innovations"</code> (residuals
+of the final filtered and/or weighted regression). For <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>: only
+<code>"response"</code> (the mean of the response) is supported.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -138,7 +141,9 @@ available) or <code>"bootstrap"</code> (re-runs the estimator). For <code><a hre
 
 
 <dt id="arg-newdata">newdata<a class="anchor" aria-label="anchor" href="#arg-newdata"></a></dt>
-<dd><p>Optional data frame in which to look for the regressors.</p></dd>
+<dd><p>Optional data frame in which to look for the regressors.
+Without it, predictions are for the observations of the fit, padded with
+<code>NA</code> for the rows dropped by <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.exclude()</a></code>.</p></dd>
 
 
 <dt id="arg-se-fit">se.fit<a class="anchor" aria-label="anchor" href="#arg-se-fit"></a></dt>
@@ -162,7 +167,8 @@ available) or <code>"bootstrap"</code> (re-runs the estimator). For <code><a hre
     <p>The usual values: a coefficient covariance matrix (<code>vcov</code>), a
 matrix of confidence limits (<code>confint</code>), vectors of residuals or fitted
 values, predictions (a vector, or a list/matrix with <code>se.fit</code>/<code>interval</code>),
-or the corresponding model components.</p>
+or the corresponding model components. The <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method returns <code>x</code>
+invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -183,6 +189,19 @@ provides no <code><a href="https://zeileis.codeberg.page/sandwich/reference/estf
 robust variance of PG26 eq. (29) and the bias-corrected sandwich of GP24 eq. (8)
 are not of the generic form those functions assume: <code><a href="https://zeileis.codeberg.page/sandwich/reference/vcovHAC.html" class="external-link">sandwich::vcovHAC()</a></code> and
 related functions would <em>not</em> reproduce them.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="variance-types">Variance types<a class="anchor" aria-label="anchor" href="#variance-types"></a></h2>
+
+
+<p><code>vcov(fit, type = t)</code> returns the stored covariance when <code>t</code> is the type the
+fit was made with (e.g. <code>"robust"</code>, or <code>"HAC"</code> for <code><a href="ols_robust.html">ols_robust()</a></code>, whose
+stored <code>vcov_type</code> label also shows the kernel and bandwidth). Other types
+are recomputed from the stored estimates only for fits made by <code><a href="fgls.html">fgls()</a></code>,
+<code><a href="serial_fgls.html">serial_fgls()</a></code> and <code><a href="lasso_fgls.html">lasso_fgls()</a></code>, and for the F-C stage of a combined fit
+(<code>fit$stages$serial</code>, types <code>"robust"</code>, <code>"HC0"</code> and <code>"HC3"</code>). The benchmark
+estimators store only the covariance they were fitted with; refit them with
+another <code>vcov</code> instead.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

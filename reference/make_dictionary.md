@@ -1,8 +1,8 @@
 # Candidate covariates for the skedastic function
 
 Builds the default dictionary of candidate covariates used by
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md) and
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md)
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md) and
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md)
 with `z = "auto"`: for every non-constant regressor \\x\\, the columns
 \\x\\, \\x^2\\, \\\log x\\ and \\(\log x)^2\\ (only when \\x \> 0\\),
 \\\cos x\\ and \\\cos 2x\\. This contains the specification \\z = (1, x,
@@ -63,7 +63,7 @@ Romano, J. P. and Wolf, M. (2017). Resurrecting weighted least squares.
 ## See also
 
 Other heteroskedasticity:
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md)
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md)
 
 ## Examples
 

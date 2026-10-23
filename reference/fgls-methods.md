@@ -1,10 +1,10 @@
 # Methods for fgls fits
 
 Standard accessors for objects returned by
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md)
-and the benchmark estimators. They make the fits work with generic tools
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md) and
+the benchmark estimators. They make the fits work with generic tools
 such as
 [`lmtest::coeftest()`](https://rdrr.io/pkg/lmtest/man/coeftest.html) and
 [`lmtest::coefci()`](https://rdrr.io/pkg/lmtest/man/coeftest.html).
@@ -31,6 +31,7 @@ predict(
   se.fit = FALSE,
   interval = c("none", "confidence"),
   level = 0.95,
+  type = "response",
   na.action = stats::na.pass,
   ...
 )
@@ -70,10 +71,12 @@ print(x, digits = max(3L, getOption("digits") - 3L), ...)
   variance chosen when fitting) or another variance type to compute from
   the stored estimates: `"robust"`, `"naive"`, `"nonrobust"`,
   `"HC0"`–`"HC3"` (where available) or `"bootstrap"` (re-runs the
-  estimator). For
+  estimator); see the section *Variance types*. For
   [`residuals()`](https://rdrr.io/r/stats/residuals.html): `"response"`
   (\\y_t - x_t'\hat\beta\\, full sample) or `"innovations"` (residuals
-  of the final filtered and/or weighted regression).
+  of the final filtered and/or weighted regression). For
+  [`predict()`](https://rdrr.io/r/stats/predict.html): only `"response"`
+  (the mean of the response) is supported.
 
 - ...:
 
@@ -89,7 +92,10 @@ print(x, digits = max(3L, getOption("digits") - 3L), ...)
 
 - newdata:
 
-  Optional data frame in which to look for the regressors.
+  Optional data frame in which to look for the regressors. Without it,
+  predictions are for the observations of the fit, padded with `NA` for
+  the rows dropped by
+  [`stats::na.exclude()`](https://rdrr.io/r/stats/na.fail.html).
 
 - se.fit:
 
@@ -112,7 +118,9 @@ print(x, digits = max(3L, getOption("digits") - 3L), ...)
 The usual values: a coefficient covariance matrix (`vcov`), a matrix of
 confidence limits (`confint`), vectors of residuals or fitted values,
 predictions (a vector, or a list/matrix with `se.fit`/`interval`), or
-the corresponding model components.
+the corresponding model components. The
+[`print()`](https://rdrr.io/r/base/print.html) method returns `x`
+invisibly.
 
 ## Details
 
@@ -122,7 +130,7 @@ made with `use_t = TRUE`. Accordingly,
 `Inf` for normal inference, so that
 [`lmtest::coeftest()`](https://rdrr.io/pkg/lmtest/man/coeftest.html)
 reproduces
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md),
 and \\n\_{eff} - q\\ otherwise.
 [`nobs()`](https://rdrr.io/r/stats/nobs.html) returns the number of
 observations in the final regression, \\n\_{eff} = T - k^\*\\.
@@ -142,16 +150,32 @@ those functions assume:
 [`sandwich::vcovHAC()`](https://zeileis.codeberg.page/sandwich/reference/vcovHAC.html)
 and related functions would *not* reproduce them.
 
+## Variance types
+
+`vcov(fit, type = t)` returns the stored covariance when `t` is the type
+the fit was made with (e.g. `"robust"`, or `"HAC"` for
+[`ols_robust()`](https://emiliogcs.com/fgls/reference/ols_robust.md),
+whose stored `vcov_type` label also shows the kernel and bandwidth).
+Other types are recomputed from the stored estimates only for fits made
+by [`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md)
+and
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+and for the F-C stage of a combined fit (`fit$stages$serial`, types
+`"robust"`, `"HC0"` and `"HC3"`). The benchmark estimators store only
+the covariance they were fitted with; refit them with another `vcov`
+instead.
+
 ## See also
 
 Other fgls:
-[`compare_fgls()`](https://emiliogcs.github.io/fgls/reference/compare_fgls.md),
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+[`compare_fgls()`](https://emiliogcs.com/fgls/reference/compare_fgls.md),
+[`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 ## Examples
 

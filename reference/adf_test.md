@@ -34,13 +34,14 @@ print(x, ...)
 ## Value
 
 A list of class `"fgls_adf"` with `statistic`, `lags`, `nobs`,
-`critical_values` and `unit_root_rejected` (at 5%).
+`critical_values` and `unit_root_rejected` (at 5%). The print method
+returns `x` invisibly.
 
 ## See also
 
 Other diagnostics:
-[`test_predetermined()`](https://emiliogcs.github.io/fgls/reference/test_predetermined.md),
-[`weight_diagnostics()`](https://emiliogcs.github.io/fgls/reference/weight_diagnostics.md)
+[`test_predetermined()`](https://emiliogcs.com/fgls/reference/test_predetermined.md),
+[`weight_diagnostics()`](https://emiliogcs.com/fgls/reference/weight_diagnostics.md)
 
 ## Examples
 

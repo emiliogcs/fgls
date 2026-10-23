@@ -21,11 +21,11 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -71,6 +71,18 @@
 <code><a href="../reference/compare_fgls.html">compare_fgls()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the other usual methods; works with <code><a href="https://rdrr.io/pkg/lmtest/man/coeftest.html" class="external-link">lmtest::coeftest()</a></code> and the broom generics.</li>
 <li>Diagnostics: <code><a href="../reference/test_predetermined.html">test_predetermined()</a></code> (experimental), <code><a href="../reference/adf_test.html">adf_test()</a></code>, <code><a href="../reference/weight_diagnostics.html">weight_diagnostics()</a></code>, <code><a href="../reference/weight_diagnostics.html">ar_roots()</a></code>, <code><a href="../reference/weight_diagnostics.html">nonexogeneity_share()</a></code>.</li>
 <li>Simulation designs of both papers: <code><a href="../reference/simulate_serial.html">simulate_serial()</a></code>, <code><a href="../reference/simulate_serial.html">simulate_hetero()</a></code>, <code><a href="../reference/simulate_serial.html">simulate_combined()</a></code>, <code><a href="../reference/simulate_serial.html">simulate_predictive()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="differences-from-pyfgls-0-1-0">Differences from pyfgls 0.1.0<a class="anchor" aria-label="anchor" href="#differences-from-pyfgls-0-1-0"></a></h3>
+<p>Estimates and default variances agree with pyfgls (see <code><a href="../articles/validation.html">vignette("validation")</a></code>). Elsewhere the R package deliberately differs:</p>
+<ul><li>
+<code>nonexogeneity_share</code> is computed from the robust variance (PG26 eqs. 28-29) whatever <code>vcov</code> is requested (pyfgls reports 0 for non-robust types), and is <code>NA</code> for the benchmark estimators and the GMA estimator, which do not compute it.</li>
+<li>
+<code><a href="../reference/ols_robust.html">durbin_estimator()</a></code> recovers the coefficients on regressors whose lags are collinear with the regressors (constant, trends, periodic dummies) as ((I - _j _j P_j)^{-1} c), e.g. (c / (1 - _j _j)) for the intercept; pyfgls reports the Durbin coefficient (c).</li>
+<li>The <code>kmax</code> cap and the <code>ar_order</code> check count the Durbin regressors that are actually kept, so dropped lags of trends and seasonal dummies no longer shrink <code>kmax</code>. Without such columns the cap is the pyfgls one.</li>
+<li>
+<code>serial = "ma1"</code> rejects <code>ar_order</code>, <code>kmax</code>, <code>lagged_dep_vars</code> and <code>vcov = "bootstrap"</code> instead of ignoring them.</li>
+<li>Formula-interface behaviour with no pyfgls counterpart: <code>subset</code>, <code>na.action</code> (including <code>na.exclude</code> padding), row-numbered error messages, and checks of time-series row order and time indexes.</li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

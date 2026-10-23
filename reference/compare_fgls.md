@@ -15,8 +15,8 @@ compare_fgls(..., level = 0.95, ols_vcov = NULL)
 
 - ...:
 
-  `"fgls"` (or `"lm"`) objects, optionally named; the names label the
-  columns.
+  `"fgls"` (or plain `"lm"`) objects, optionally named; the names label
+  the columns.
 
 - level:
 
@@ -37,18 +37,22 @@ A data frame with columns `term`, `statistic` (`"estimate"`,
 Plain [`stats::lm()`](https://rdrr.io/r/stats/lm.html) fits are accepted
 and converted to OLS with HAC (Andrews quadratic-spectral) standard
 errors when any other fit corrects for serial correlation, and with HC3
-standard errors otherwise; override with `ols_vcov`.
+standard errors otherwise; override with `ols_vcov`. Other models that
+inherit from `"lm"` (`glm`, multivariate `mlm` fits, weighted fits, fits
+with an offset, ...) are rejected, because the conversion would replace
+them by unweighted OLS; use
+[`ols_robust()`](https://emiliogcs.com/fgls/reference/ols_robust.md) for
+OLS with robust standard errors.
 
 ## See also
 
-Other fgls:
-[`fgls()`](https://emiliogcs.github.io/fgls/reference/fgls.md),
-[`fgls-methods`](https://emiliogcs.github.io/fgls/reference/fgls-methods.md),
-[`fgls_control()`](https://emiliogcs.github.io/fgls/reference/fgls_control.md),
-[`lasso_fgls()`](https://emiliogcs.github.io/fgls/reference/lasso_fgls.md),
-[`plot.fgls()`](https://emiliogcs.github.io/fgls/reference/plot.fgls.md),
-[`serial_fgls()`](https://emiliogcs.github.io/fgls/reference/serial_fgls.md),
-[`summary.fgls()`](https://emiliogcs.github.io/fgls/reference/summary.fgls.md)
+Other fgls: [`fgls()`](https://emiliogcs.com/fgls/reference/fgls.md),
+[`fgls-methods`](https://emiliogcs.com/fgls/reference/fgls-methods.md),
+[`fgls_control()`](https://emiliogcs.com/fgls/reference/fgls_control.md),
+[`lasso_fgls()`](https://emiliogcs.com/fgls/reference/lasso_fgls.md),
+[`plot.fgls()`](https://emiliogcs.com/fgls/reference/plot.fgls.md),
+[`serial_fgls()`](https://emiliogcs.com/fgls/reference/serial_fgls.md),
+[`summary.fgls()`](https://emiliogcs.com/fgls/reference/summary.fgls.md)
 
 ## Examples
 

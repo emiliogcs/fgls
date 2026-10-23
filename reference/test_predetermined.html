@@ -39,11 +39,11 @@ and with lags \(1..l\) of the stochastic regressors."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fgls.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fgls-intro.html">Getting started with fgls</a></li>
-    <li><hr class="dropdown-divider"></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Methods</h6></li>
     <li><a class="dropdown-item" href="../articles/serial-correlation.html">Serial correlation (Perron and González-Coya, 2026)</a></li>
     <li><a class="dropdown-item" href="../articles/heteroskedasticity.html">Heteroskedasticity of unknown form (González-Coya and Perron, 2024)</a></li>
@@ -114,7 +114,7 @@ unless the model truly has none.</p></dd>
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame, a list, a <code>ts</code>/<code>mts</code> object, or a 'zoo'/'xts'
 object containing the variables in the formula. Rows must be in time
-order (unless <code>serial = "none"</code>).</p></dd>
+order.</p></dd>
 
 
 <dt id="arg-max-lag">max_lag<a class="anchor" aria-label="anchor" href="#arg-max-lag"></a></dt>
@@ -122,7 +122,8 @@ order (unless <code>serial = "none"</code>).</p></dd>
 
 
 <dt id="arg-ar-order">ar_order<a class="anchor" aria-label="anchor" href="#arg-ar-order"></a></dt>
-<dd><p>Fixed AR order (implies <code>serial = "fixed"</code>).</p></dd>
+<dd><p>Fixed AR order of the Durbin regression; <code>NULL</code> (default)
+selects it by BIC up to <code>kmax</code>.</p></dd>
 
 
 <dt id="arg-kmax">kmax<a class="anchor" aria-label="anchor" href="#arg-kmax"></a></dt>
@@ -148,17 +149,22 @@ all non-constant regressors).</p></dd>
 <dt id="arg-na-action">na.action<a class="anchor" aria-label="anchor" href="#arg-na-action"></a></dt>
 <dd><p><code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.fail()</a></code> (default) stops on missing values;
 <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.omit()</a></code> or <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">stats::na.exclude()</a></code> drop them. For time series only
-leading and trailing missing values can be dropped.</p></dd>
+leading and trailing missing values can be dropped. With <code>na.exclude</code>,
+<code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> and <code><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted()</a></code> are padded with <code>NA</code> to the rows selected by
+<code>subset</code>, as for <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code>.</p></dd>
 
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
 <dd><p>Time index for data frames: the name of a <code>Date</code>, <code>POSIXct</code> or
 numeric column of <code>data</code>, or a vector with one value per row. It is used
-to check that rows are sorted and have no gaps.</p></dd>
+to check that rows are sorted and have no gaps, and must have no missing
+values in the sample. Convert character dates first, e.g. with
+<code><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date()</a></code> or <code><a href="https://rdrr.io/pkg/zoo/man/yearmon.html" class="external-link">zoo::as.yearmon()</a></code>.</p></dd>
 
 
 <dt id="arg-allow-gaps">allow_gaps<a class="anchor" aria-label="anchor" href="#arg-allow-gaps"></a></dt>
-<dd><p>Accept a time index with gaps (lags are then positional).</p></dd>
+<dd><p>Accept a time index with gaps, or a <code>subset</code> that skips
+rows (lags are then positional), with a warning.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -171,9 +177,15 @@ to check that rows are sorted and have no gaps.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>"fgls_predetermined"</code>: a list with <code>table</code> (a
-data frame with columns <code>lags</code>, <code>LM</code>, <code>df</code>, <code>p.value</code>), <code>ar_order</code>,
-<code>regressors</code>, <code>alpha</code>, <code>rejected</code> and <code>advice</code>.</p>
+    <p>An object of class <code>"fgls_predetermined"</code>: a list with</p><ul><li><p><code>table</code>: a data frame with columns <code>lags</code>, <code>LM</code>, <code>df</code> and <code>p.value</code>,
+one row per number of added lags;</p></li>
+<li><p><code>ar_order</code>: the AR order of the Durbin regression;</p></li>
+<li><p><code>regressors</code>: the names of the regressors whose lags were tested;</p></li>
+<li><p><code>alpha</code>: the level used for the advice;</p></li>
+<li><p><code>rejected</code>: <code>TRUE</code> if some test rejects at level <code>alpha</code>;</p></li>
+<li><p><code>advice</code>: a sentence summarizing the result;</p></li>
+<li><p><code>scale</code>: the <code>scale</code> used, <code>"innovations"</code> or <code>"errors"</code>.</p></li>
+</ul><p>The print method returns <code>x</code> invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
