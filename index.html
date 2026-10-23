@@ -16,15 +16,26 @@
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="fgls: Feasible GLS for serial correlation and heteroskedasticity">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
+<script src="extra.js"></script><meta property="og:title" content="fgls: Feasible GLS for serial correlation and heteroskedasticity">
 <meta name="description" content="Feasible generalized least squares (FGLS) estimators for linear regressions whose errors are serially correlated, heteroskedastic of unknown form, or both. Serial correlation is handled by the autoregressive filter of Perron and González-Coya (2026) &lt;doi:10.1016/j.jeconom.2026.106346&gt;, estimated from a Durbin regression whose order is chosen by an information criterion, with a variance estimator that stays valid when the regressors are only pre-determined rather than strictly exogenous. Heteroskedasticity is handled by the adaptive Lasso estimate of the skedastic function of González-Coya and Perron (2024) &lt;doi:10.1515/jem-2023-0007&gt;, with a bias-corrected sandwich variance. Both corrections can be combined. Benchmark estimators (ordinary least squares with heteroskedasticity and autocorrelation consistent standard errors, Cochrane-Orcutt, infeasible GLS) and the simulation designs of both papers are included.">
 <meta property="og:description" content="Feasible generalized least squares (FGLS) estimators for linear regressions whose errors are serially correlated, heteroskedastic of unknown form, or both. Serial correlation is handled by the autoregressive filter of Perron and González-Coya (2026) &lt;doi:10.1016/j.jeconom.2026.106346&gt;, estimated from a Durbin regression whose order is chosen by an information criterion, with a variance estimator that stays valid when the regressors are only pre-determined rather than strictly exogenous. Heteroskedasticity is handled by the adaptive Lasso estimate of the skedastic function of González-Coya and Perron (2024) &lt;doi:10.1515/jem-2023-0007&gt;, with a bias-corrected sandwich variance. Both corrections can be combined. Benchmark estimators (ordinary least squares with heteroskedasticity and autocorrelation consistent standard errors, Cochrane-Orcutt, infeasible GLS) and the simulation designs of both papers are included.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0F0E" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/eb-garamond-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+<script>document.documentElement.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
-
-
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <header class="wrap site-header"><p class="name"><a href="/">Emilio González Coya</a></p>
+  <nav class="nav" aria-label="Primary"><ul>
+<li><a href="/#research">research</a></li>
+      <li><a href="/code/">code</a></li>
+      <li><a href="/contact/">contact</a></li>
+    </ul></nav></header><nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">fgls</a>
 
@@ -218,11 +229,32 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Emilio González-Coya.</p>
+  <h2 class="label" id="contact-h">
+Contact
+</h2>
+<div class="body footer-row">
+<ul class="links">
+<li>
+<a href="/contact/">email</a>
+</li>
+<li>
+<a href="https://scholar.google.com/citations?user=ekQ7IjcAAAAJ" class="external-link">google scholar</a>
+</li>
+<li>
+<a href="https://github.com/emiliogcs" class="external-link">github</a>
+</li>
+<li>
+<a href="https://www.linkedin.com/in/emiliogcs/" class="external-link">linkedin</a>
+</li>
+</ul>
+</div>
+<p class="colophon">
+© 2026 Emilio González Coya Sandoval
+</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
+  <p>Developed by Emilio González-Coya. Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
