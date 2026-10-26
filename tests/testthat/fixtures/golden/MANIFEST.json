@@ -1,8 +1,8 @@
 {
   "numpy": "2.5.4",
-  "pyfgls": "0.1.0",
-  "pyfgls_pin": "0.1.0",
-  "python": "3.13.16",
+  "pyfgls": "0.1.1",
+  "pyfgls_pin": "0.1.1",
+  "python": "3.13.17",
   "scenarios": {
     "s10_homoskedastic": {
       "data": "s10_data.csv",
