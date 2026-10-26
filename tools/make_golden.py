@@ -16,6 +16,7 @@ The pyfgls version, the numerical library versions and the seeds are recorded in
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import platform
@@ -563,6 +564,13 @@ SOLVER_BLOCKS = frozenset({"gma", "svr"})
 SOLVER_RTOL = 1e-5
 
 
+def read_csv(path: Path) -> dict[str, list[float]]:
+    """Columns of a fixture data file written by ``write_csv``."""
+    with path.open(newline="") as fh:
+        names, *rows = list(csv.reader(fh))
+    return {name: [float(row[j]) for row in rows] for j, name in enumerate(names)}
+
+
 def _numbers(x: Any) -> list[float] | None:
     """The numbers of a (nested) numeric list or scalar; None if it holds anything else."""
     if isinstance(x, list):
@@ -627,8 +635,13 @@ def check_drift(committed: Path, fresh: Path, rtol: float) -> int:
         _compare(json.loads(old.read_text()), json.loads(f.read_text()), f.stem, rtol, problems)
     for f in sorted(fresh.glob("*.csv")):
         old = committed / f.name
-        if not old.exists() or old.read_bytes() != f.read_bytes():
-            problems.append(f"{f.name}: data differ")
+        if not old.exists():
+            problems.append(f"{f.name}: not committed")
+            continue
+        # Compared as numbers, not bytes: numpy's SIMD code paths for transcendental
+        # functions (np.exp under AVX-512 or AVX2) differ in the last bits across CPUs,
+        # e.g. 1-32 ulps in y of s8 and s9.
+        _compare(read_csv(old), read_csv(f), f.name, rtol, problems)
     if problems:
         print(f"Golden fixtures drifted ({len(problems)} differences; first 50):")
         print("\n".join(problems[:50]))
