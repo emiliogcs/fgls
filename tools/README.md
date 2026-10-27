@@ -10,7 +10,7 @@ the pyfgls outputs and intermediates (`*_golden.json`). R never re-simulates gol
 data. The tolerance policy is in `tests/testthat/helper-golden.R`.
 
 ```sh
-pip install "pyfgls==0.1.0"
+pip install "pyfgls==0.1.1"
 python tools/make_golden.py            # regenerate
 python tools/make_golden.py --check    # compare a fresh regeneration with the committed files
 ```
@@ -18,12 +18,23 @@ python tools/make_golden.py --check    # compare a fresh regeneration with the c
 `.github/workflows/golden.yaml` runs `--check` weekly with the pinned and the latest
 pyfgls, then the R golden tests, and opens an issue on drift.
 
-Known pyfgls 0.1.0 issues (fixed on pyfgls main by emiliogcs/pyfgls#2, not yet in a
-PyPI release): its Lasso path (scikit-learn LARS) stops at penalties below float32
-epsilon (~1.2e-7), and coefficients of order 1e-17 can count as selected. The golden
-CV curves are therefore compared for penalties of at least 1.2e-7. Once a pyfgls
-release contains the fixes, regenerate the fixtures with it (`make_golden.py`,
-updating `pyfgls_pin`) and remove the mask (`.lars_valid_lambda` in
+`--check` compares every array, and every data column, norm-wise (max |difference| /
+max |value|, as the R tests do) at a relative tolerance of 1e-10, not byte for byte:
+the results depend on the CPU in the last bits. numpy's SIMD paths for `np.exp`
+(AVX-512 or AVX2) change the simulated `y` of s8 and s9 by 1-32 ulps (reproduce with
+`NPY_DISABLE_CPU_FEATURES=X86_V4`), and so do OpenBLAS's kernels for the results
+(`OPENBLAS_CORETYPE=Haswell`). Iterative solvers (GMA's MA(1) maximum likelihood,
+libsvm's SVR) amplify this to ~1e-6, so their outputs are compared at 1e-5.
+
+pyfgls 0.1.1 fixed the Lasso issues of 0.1.0 (path truncated at penalties below
+float32 epsilon; coefficients of order 1e-17 counted as selected). One remains in
+0.1.1: when the rescaled covariates are tiny, scikit-learn's LARS reports a degenerate
+active set and pyfgls falls back to coordinate descent, whose CV errors at very small
+penalties are inexact (in the fixtures: s10, psi = 2, penalties below 4e-10, by up to
+5e-3). The golden CV curves are therefore still compared for penalties of at least
+1.2e-7. A fix is pending in pyfgls; with it, R and pyfgls agree on every CV curve to
+~1e-11. Once a pyfgls release contains it, regenerate the fixtures with it
+(`make_golden.py`, updating `PYFGLS_PIN`) and remove the mask (`.lars_valid_lambda` in
 `tests/testthat/test-golden-hetero.R`).
 
 ## Distributional comparison (`compare_python_r.R`, `make_validation.py`)

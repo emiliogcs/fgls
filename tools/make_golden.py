@@ -16,6 +16,7 @@ The pyfgls version, the numerical library versions and the seeds are recorded in
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import platform
@@ -34,7 +35,7 @@ from pyfgls.serial.ma import estimate_gma
 from pyfgls.serial.variance import serial_variance
 from pyfgls.simulate import combined_dgp, hetero_dgp, serial_dgp
 
-PYFGLS_PIN = "0.1.0"
+PYFGLS_PIN = "0.1.1"
 SCENARIOS: dict[str, Any] = {}
 
 
@@ -554,23 +555,69 @@ def s10_homoskedastic(out: Path) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------------------- drift
+#: Outputs of iterative numerical solvers (the MA(1) maximum likelihood behind GMA,
+#: libsvm's SVR) depend on the BLAS kernels in the last bits, which the solver
+#: amplifies. Across OpenBLAS's kernels (OPENBLAS_CORETYPE, i.e. across CPUs) they move
+#: by up to ~3e-8 (gma) and ~1e-6 (svr cv_mse); every other output by less than 1e-10.
+#: The R tests compare them at 1e-4 (gma_theta) or not at all (SVR CV errors).
+SOLVER_BLOCKS = frozenset({"gma", "svr"})
+SOLVER_RTOL = 1e-5
+
+
+def read_csv(path: Path) -> dict[str, list[float]]:
+    """Columns of a fixture data file written by ``write_csv``."""
+    with path.open(newline="") as fh:
+        names, *rows = list(csv.reader(fh))
+    return {name: [float(row[j]) for row in rows] for j, name in enumerate(names)}
+
+
+def _numbers(x: Any) -> list[float] | None:
+    """The numbers of a (nested) numeric list or scalar; None if it holds anything else."""
+    if isinstance(x, list):
+        out: list[float] = []
+        for v in x:
+            f = _numbers(v)
+            if f is None:
+                return None
+            out.extend(f)
+        return out
+    if isinstance(x, int | float) and not isinstance(x, bool):
+        return [float(x)]
+    return None
+
+
+def _compare_numbers(
+    a: list[float], b: list[float], path: str, rtol: float, out: list[str]
+) -> None:
+    """Norm-wise relative difference max|a - b| / max(|a|, |b|), as in the R tests."""
+    if not a:
+        return
+    diff = [abs(x - y) for x, y in zip(a, b, strict=True)]
+    i = max(range(len(diff)), key=diff.__getitem__)
+    scale = max(max(map(abs, a)), max(map(abs, b)), 1e-300)
+    if diff[i] > rtol * scale and diff[i] > 1e-14:
+        where = f"[{i}]" if len(a) > 1 else ""
+        out.append(f"{path}{where}: {a[i]!r} != {b[i]!r} (norm-wise {diff[i] / scale:.1e})")
+
+
 def _compare(a: Any, b: Any, path: str, rtol: float, out: list[str]) -> None:
     if isinstance(a, dict) and isinstance(b, dict):
         for k in sorted(set(a) | set(b)):
             if k not in a or k not in b:
                 out.append(f"{path}.{k}: present in only one version")
             else:
-                _compare(a[k], b[k], f"{path}.{k}", rtol, out)
+                sub = max(rtol, SOLVER_RTOL) if k in SOLVER_BLOCKS else rtol
+                _compare(a[k], b[k], f"{path}.{k}", sub, out)
+        return
+    if isinstance(a, list) and isinstance(b, list) and len(a) != len(b):
+        out.append(f"{path}: length {len(a)} != {len(b)}")
+        return
+    na, nb = _numbers(a), _numbers(b)
+    if na is not None and nb is not None and len(na) == len(nb):
+        _compare_numbers(na, nb, path, rtol, out)
     elif isinstance(a, list) and isinstance(b, list):
-        if len(a) != len(b):
-            out.append(f"{path}: length {len(a)} != {len(b)}")
-            return
         for i, (x, y) in enumerate(zip(a, b, strict=True)):
             _compare(x, y, f"{path}[{i}]", rtol, out)
-    elif isinstance(a, float | int) and isinstance(b, float | int) and not isinstance(a, bool):
-        scale = max(abs(float(a)), abs(float(b)), 1e-300)
-        if abs(float(a) - float(b)) > rtol * scale and abs(float(a) - float(b)) > 1e-14:
-            out.append(f"{path}: {a!r} != {b!r}")
     elif a != b:
         out.append(f"{path}: {a!r} != {b!r}")
 
@@ -588,8 +635,13 @@ def check_drift(committed: Path, fresh: Path, rtol: float) -> int:
         _compare(json.loads(old.read_text()), json.loads(f.read_text()), f.stem, rtol, problems)
     for f in sorted(fresh.glob("*.csv")):
         old = committed / f.name
-        if not old.exists() or old.read_bytes() != f.read_bytes():
-            problems.append(f"{f.name}: data differ")
+        if not old.exists():
+            problems.append(f"{f.name}: not committed")
+            continue
+        # Compared as numbers, not bytes: numpy's SIMD code paths for transcendental
+        # functions (np.exp under AVX-512 or AVX2) differ in the last bits across CPUs,
+        # e.g. 1-32 ulps in y of s8 and s9.
+        _compare(read_csv(old), read_csv(f), f.name, rtol, problems)
     if problems:
         print(f"Golden fixtures drifted ({len(problems)} differences; first 50):")
         print("\n".join(problems[:50]))
@@ -609,7 +661,9 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="regenerate into a temporary directory and compare with the committed fixtures",
     )
-    ap.add_argument("--rtol", type=float, default=1e-10, help="relative tolerance for --check")
+    ap.add_argument(
+        "--rtol", type=float, default=1e-10, help="norm-wise relative tolerance per array for --check"
+    )
     args = ap.parse_args(argv)
     if args.check:
         import tempfile
