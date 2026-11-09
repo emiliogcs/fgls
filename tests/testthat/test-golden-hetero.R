@@ -1,9 +1,6 @@
 # Golden tests against pyfgls for the heteroskedasticity estimator (scenarios 7,
 # 8 and 10). R reads pyfgls' fold assignment, so cross-validation is comparable.
 
-# Smallest penalty at which the pinned pyfgls' Lasso path is compared (see below).
-.lars_valid_lambda <- 1.2e-7
-
 golden_Z <- function(g) {
   d <- g$data
   r <- g$res
@@ -80,14 +77,9 @@ for (id in c("s7", "s8", "s10")) {
       p <- fit$tuning$cv_path[[i]]
       expect_equal(p$psi, r$psi_grid[i])
       expect_rel(range(p$lambda), sort(r$cv_lambda_range[i, ]), golden_tol$exact, "lambda grid")
-      # pyfgls solves the Lasso by scikit-learn's LARS. When the rescaled
-      # covariates are tiny (s10, psi = 2), pyfgls 0.1.1 falls back to coordinate
-      # descent, whose CV errors at very small penalties (here below 4e-10) are
-      # not the exact Lasso errors (pyfgls issue, see tools/README.md).
-      # Compare where the reference is valid; R's solutions satisfy the KKT
-      # conditions everywhere (test-hetero.R).
-      ok <- p$lambda >= .lars_valid_lambda
-      expect_abs(p$cv_mse[ok], cvm[i, ok], golden_tol$cv_curve_abs, sprintf("CV curve psi=%g", p$psi))
+      # The whole curve: since pyfgls 0.1.2 both solve the Lasso exactly at every
+      # penalty (R's solutions satisfy the KKT conditions, test-hetero.R).
+      expect_abs(p$cv_mse, cvm[i, ], golden_tol$cv_curve_abs, sprintf("CV curve psi=%g", p$psi))
     }
     expect_identical(fit$tuning$psi, r$psi_star)
     expect_rel(fit$tuning$lambda, r$lambda_star, golden_tol$exact, "lambda*")

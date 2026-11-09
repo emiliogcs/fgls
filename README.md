@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![CRAN status](https://www.r-pkg.org/badges/version/fgls)](https://CRAN.R-project.org/package=fgls)
 [![R-CMD-check](https://github.com/emiliogcs/fgls/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/emiliogcs/fgls/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
@@ -32,11 +33,10 @@ machine precision on deterministic quantities. More code by the author:
 ## Installation
 
 ``` r
+install.packages("fgls")
 # development version
 # install.packages("pak")
 pak::pak("emiliogcs/fgls")
-# from CRAN, once released
-install.packages("fgls")
 ```
 
 ## Serial correlation with a non-exogenous regressor

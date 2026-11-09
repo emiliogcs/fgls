@@ -1,7 +1,7 @@
 {
   "numpy": "2.5.4",
-  "pyfgls": "0.1.1",
-  "pyfgls_pin": "0.1.1",
+  "pyfgls": "0.1.2",
+  "pyfgls_pin": "0.1.2",
   "python": "3.13.17",
   "scenarios": {
     "s10_homoskedastic": {

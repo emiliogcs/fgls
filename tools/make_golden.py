@@ -35,7 +35,7 @@ from pyfgls.serial.ma import estimate_gma
 from pyfgls.serial.variance import serial_variance
 from pyfgls.simulate import combined_dgp, hetero_dgp, serial_dgp
 
-PYFGLS_PIN = "0.1.1"
+PYFGLS_PIN = "0.1.2"
 SCENARIOS: dict[str, Any] = {}
 
 
