@@ -8,7 +8,7 @@ package [pyfgls](https://pypi.org/project/pyfgls/) and agrees with it to machine
 precision.
 
 ```r
-pak::pak("emiliogcs/fgls")   # install.packages("fgls") once on CRAN
+install.packages("fgls")   # development version: pak::pak("emiliogcs/fgls")
 library(fgls)
 fit <- fgls(y ~ x, data = df)            # serial correlation + heteroskedasticity
 serial_fgls(y ~ x, data = df)            # serial correlation only
