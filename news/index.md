@@ -2,6 +2,8 @@
 
 ## fgls 0.1.0
 
+CRAN release: 2026-11-07
+
 First release. A port of the Python package ‘pyfgls’ (0.1.0), validated
 against it (golden fixtures and a cross-language comparison on 4,000
 simulated data sets).

@@ -25,11 +25,10 @@ machine precision on deterministic quantities. More code by the author:
 
 ``` r
 
+install.packages("fgls")
 # development version
 # install.packages("pak")
 pak::pak("emiliogcs/fgls")
-# from CRAN, once released
-install.packages("fgls")
 ```
 
 ## Serial correlation with a non-exogenous regressor

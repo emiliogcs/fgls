@@ -61,7 +61,7 @@ fgls_control(
   `"fold"` (default) re-estimates the ridge first step, and hence the
   adaptive weights, on every training fold; `"full"` computes the
   weights once on the full sample (the common practice with
-  [`glmnet::cv.glmnet()`](https://glmnet.stanford.edu/reference/cv.glmnet.html)
+  [`glmnet::cv.glmnet()`](https://rdrr.io/pkg/glmnet/man/cv.glmnet.html)
   and `penalty.factor`).
 
 - ridge_scale:
@@ -84,7 +84,7 @@ fgls_control(
   Solver of the Lasso problems: `"lars"` (default) computes the exact
   solution path by the LARS homotopy with the Lasso modification, as
   'pyfgls' does; `"glmnet"` uses
-  [`glmnet::glmnet()`](https://glmnet.stanford.edu/reference/glmnet.html)
+  [`glmnet::glmnet()`](https://rdrr.io/pkg/glmnet/man/glmnet.html)
   (coordinate descent) followed by an exact active-set refinement. Both
   give the same solutions; `"lars"` is faster for the moderate numbers
   of candidate covariates typical here.
@@ -92,8 +92,8 @@ fgls_control(
 - glmnet_thresh:
 
   Convergence threshold passed to
-  [`glmnet::glmnet()`](https://glmnet.stanford.edu/reference/glmnet.html)
-  when `lasso_engine = "glmnet"`.
+  [`glmnet::glmnet()`](https://rdrr.io/pkg/glmnet/man/glmnet.html) when
+  `lasso_engine = "glmnet"`.
 
 - delta_scale:
 
